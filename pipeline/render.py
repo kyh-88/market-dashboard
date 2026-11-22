@@ -421,6 +421,9 @@ def render(D: dict) -> str:
         top_ai = [f'<div class="verdict"><h1>AI funding chain is {ai["light"]}.</h1><p>Risk travels from the weakest balance sheets to the strongest. '
                   'Credit is the alarm, Anthropic’s earnings are the verdict, and hyperscalers’ 2027 capex guidance decides whether to back upstream or the hyperscalers.</p></div>',
                   ai_block(ai, full=True)]
+        wn = (D.get("manual") or {}).get("weekly_note") or {}
+        if wn.get("text"):
+            top_ai.append(f'<h2>This week in the news <small>{esc(wn.get("date", ""))}</small></h2><div class="panel"><p style="margin:0;max-width:80ch">{esc(wn["text"])}</p></div>')
         Q = ['<h2>Credit signals from the news <small>updated weekly</small></h2><div class="tbl"><table><tr><th>Indicator</th><th>Value</th><th>As of</th><th>Light</th><th>Watch</th><th>Danger</th></tr>']
         for it in ai["b_layer"]:
             v = "–" if it.get("value") is None else f'{it["value"]:,}{esc(it["unit"])}'

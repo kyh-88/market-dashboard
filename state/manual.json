@@ -1,59 +1,208 @@
 {
   "_readme": "Layers B and C have no free API. Updated weekly from news (later by Claude's weekly scheduled task). dir=1 means higher is worse; dir=-1 means lower is worse.",
-
   "capex_cut_announced": false,
   "flags": {
     "monetization_miss": false,
     "capex_surprise": false,
     "_note": "monetization_miss: set true when Anthropic's revenue grows <15% QoQ AND compute gross margin fails to recover from 42%. capex_surprise: set true when hyperscalers' 2027 capex guidance surprises (sharp cut or sharp raise)."
   },
-
   "b_layer": [
-    {"id": "crwv_cds", "name": "CoreWeave 5Y CDS", "value": 1155, "unit": "bp", "date": "2026-11-06",
-     "amber": 800, "red": 1289, "dir": 1, "pillar": "credit",
-     "note": "Peaked ~1,289bp on 11/5; a new high = red, below 800bp = all clear"},
-    {"id": "crwv_bond", "name": "CoreWeave 2031/32 unsecured bond yield", "value": 15.5, "unit": "%", "date": "2026-11",
-     "amber": 16, "red": 18, "dir": 1, "pillar": "credit",
-     "note": "Above 18%, or bond price below 70"},
-    {"id": "orcl_cds", "name": "Oracle 5Y CDS", "value": 300, "unit": "bp", "date": "2026-11",
-     "amber": 300, "red": 400, "dir": 1, "pillar": "credit",
-     "note": "Watch the trend: steady widening is the warning (400bp red line is provisional)"},
-    {"id": "ai_ig_gap", "name": "AI IG bonds − other IG spread gap", "value": 71, "unit": "bp", "date": "2026-11-05",
-     "amber": 70, "red": 100, "dir": 1, "pillar": "credit",
-     "note": "11/5: AI IG 148bp vs other IG 77bp; a widening gap is the warning"},
-    {"id": "gpu_loan", "name": "GPU-secured loan rate (new DDTL/ABS)", "value": 10.5, "unit": "%", "date": "2026-11",
-     "amber": 12, "red": 15, "dir": 1, "pillar": "credit",
-     "note": "Currently 9–12%; above 15% = refinancing chain breaks"},
-    {"id": "h100_rent", "name": "H100 hourly rental", "value": null, "unit": "$/hr", "date": "",
-     "amber": 1.9, "red": 1.65, "dir": -1, "pillar": "credit",
-     "note": "Below $1.65, collateral residual value heads toward zero"}
+    {
+      "id": "crwv_cds",
+      "name": "CoreWeave 5Y CDS",
+      "value": 1155,
+      "unit": "bp",
+      "date": "2026-11-06",
+      "amber": 800,
+      "red": 1289,
+      "dir": 1,
+      "pillar": "credit",
+      "note": "Peaked ~1,289bp on 11/5; a new high = red, below 800bp = all clear",
+      "source": ""
+    },
+    {
+      "id": "crwv_bond",
+      "name": "CoreWeave 2031/32 unsecured bond yield",
+      "value": 15.5,
+      "unit": "%",
+      "date": "2026-11",
+      "amber": 16,
+      "red": 18,
+      "dir": 1,
+      "pillar": "credit",
+      "note": "Above 18%, or bond price below 70",
+      "source": ""
+    },
+    {
+      "id": "orcl_cds",
+      "name": "Oracle 5Y CDS",
+      "value": 300,
+      "unit": "bp",
+      "date": "2026-11",
+      "amber": 300,
+      "red": 400,
+      "dir": 1,
+      "pillar": "credit",
+      "note": "Watch the trend: steady widening is the warning (400bp red line is provisional)",
+      "source": ""
+    },
+    {
+      "id": "ai_ig_gap",
+      "name": "AI IG bonds − other IG spread gap",
+      "value": 71,
+      "unit": "bp",
+      "date": "2026-11-05",
+      "amber": 70,
+      "red": 100,
+      "dir": 1,
+      "pillar": "credit",
+      "note": "11/5: AI IG 148bp vs other IG 77bp; a widening gap is the warning",
+      "source": ""
+    },
+    {
+      "id": "gpu_loan",
+      "name": "GPU-secured loan rate (new DDTL/ABS)",
+      "value": 10.5,
+      "unit": "%",
+      "date": "2026-11",
+      "amber": 12,
+      "red": 15,
+      "dir": 1,
+      "pillar": "credit",
+      "note": "Currently 9–12%; above 15% = refinancing chain breaks",
+      "source": ""
+    },
+    {
+      "id": "h100_rent",
+      "name": "H100 hourly rental",
+      "value": null,
+      "unit": "$/hr",
+      "date": "",
+      "amber": 1.9,
+      "red": 1.65,
+      "dir": -1,
+      "pillar": "credit",
+      "note": "Below $1.65, collateral residual value heads toward zero",
+      "source": ""
+    }
   ],
-
   "checklist": [
-    {"co": "Anthropic", "item": "Revenue growth ≥ 15% QoQ (breakeven within 12 months needs ~14–18%)", "status": "pending", "pillar": "monetize"},
-    {"co": "Anthropic", "item": "Compute gross margin recovers from 42% (was 52% in Q2)", "status": "pending", "pillar": "monetize"},
-    {"co": "CoreWeave", "item": "Quarterly newly powered capacity re-accelerates (Q2 ~500MW → Q3 ~200MW)", "status": "pending", "pillar": "credit"},
-    {"co": "CoreWeave", "item": "Powered/contracted ratio improves (now ~1.7/4.6GW, ~37%); powered >1.85GW by year-end", "status": "pending", "pillar": "credit"},
-    {"co": "Hyperscalers", "item": "2027 capex guidance: big raise = bullish upstream; flat or cut = bullish hyperscalers", "status": "pending", "pillar": "capex"},
-    {"co": "Hyperscalers", "item": "10-Q footnotes: commencement schedule of not-yet-commenced leases (leverage jumps the quarter they start)", "status": "pending", "pillar": "capex"},
-    {"co": "Nvidia", "item": "Whether any of the $118bn of guarantees is actually paid out ($105bn is OpenAI's Ohio campus)", "status": "pending", "pillar": "credit"},
-    {"co": "Nvidia", "item": "Trend in neocloud commitments ($36bn → $32bn); losses on purchase obligations", "status": "pending", "pillar": "capex"},
-    {"co": "OpenAI", "item": "Annualized revenue news and IPO timing (largest counterparty behind ORCL, CRWV and Nvidia's guarantees)", "status": "pending", "pillar": "monetize"},
-    {"co": "AI models", "item": "Another round of major API price cuts = price war intensifying", "status": "pending", "pillar": "monetize"}
+    {
+      "co": "Anthropic",
+      "item": "Revenue growth ≥ 15% QoQ (breakeven within 12 months needs ~14–18%)",
+      "status": "pending",
+      "pillar": "monetize"
+    },
+    {
+      "co": "Anthropic",
+      "item": "Compute gross margin recovers from 42% (was 52% in Q2)",
+      "status": "pending",
+      "pillar": "monetize"
+    },
+    {
+      "co": "CoreWeave",
+      "item": "Quarterly newly powered capacity re-accelerates (Q2 ~500MW → Q3 ~200MW)",
+      "status": "pending",
+      "pillar": "credit"
+    },
+    {
+      "co": "CoreWeave",
+      "item": "Powered/contracted ratio improves (now ~1.7/4.6GW, ~37%); powered >1.85GW by year-end",
+      "status": "pending",
+      "pillar": "credit"
+    },
+    {
+      "co": "Hyperscalers",
+      "item": "2027 capex guidance: big raise = bullish upstream; flat or cut = bullish hyperscalers",
+      "status": "pending",
+      "pillar": "capex"
+    },
+    {
+      "co": "Hyperscalers",
+      "item": "10-Q footnotes: commencement schedule of not-yet-commenced leases (leverage jumps the quarter they start)",
+      "status": "pending",
+      "pillar": "capex"
+    },
+    {
+      "co": "Nvidia",
+      "item": "Whether any of the $118bn of guarantees is actually paid out ($105bn is OpenAI's Ohio campus)",
+      "status": "pending",
+      "pillar": "credit"
+    },
+    {
+      "co": "Nvidia",
+      "item": "Trend in neocloud commitments ($36bn → $32bn); losses on purchase obligations",
+      "status": "pending",
+      "pillar": "capex"
+    },
+    {
+      "co": "OpenAI",
+      "item": "Annualized revenue news and IPO timing (largest counterparty behind ORCL, CRWV and Nvidia's guarantees)",
+      "status": "pending",
+      "pillar": "monetize"
+    },
+    {
+      "co": "AI models",
+      "item": "Another round of major API price cuts = price war intensifying",
+      "status": "pending",
+      "pillar": "monetize"
+    }
   ],
-
   "calendar": [
-    {"date": "2026-12-09", "event": "FOMC (a 25bp hike is priced)", "approx": false},
-    {"date": "2026-12-15", "event": "ERCOT data-center impact review report (mid-December)", "approx": true},
-    {"date": "2026-12-31", "event": "CoreWeave ~$4.4bn debt due by year-end", "approx": true},
-    {"date": "2027-01-11", "event": "New Ohio governor takes office (data-center permitting)", "approx": true},
-    {"date": "2027-01-19", "event": "New Texas governor takes office (data-center permitting)", "approx": true},
-    {"date": "2027-01-27", "event": "Hyperscaler Q4 earnings and 2027 capex guidance (from late January)", "approx": true},
-    {"date": "2027-02-25", "event": "Nvidia and CoreWeave earnings; Anthropic's first report as a public company (Feb–Mar)", "approx": true},
-    {"date": null, "event": "Nvidia names a permanent CEO", "approx": true},
-    {"date": null, "event": "OpenAI IPO", "approx": true},
-    {"date": null, "event": "CoreWeave ~$6.2bn of debt due during 2027", "approx": true}
+    {
+      "date": "2026-12-09",
+      "event": "FOMC (a 25bp hike is priced)",
+      "approx": false
+    },
+    {
+      "date": "2026-12-15",
+      "event": "ERCOT data-center impact review report (mid-December)",
+      "approx": true
+    },
+    {
+      "date": "2026-12-31",
+      "event": "CoreWeave ~$4.4bn debt due by year-end",
+      "approx": true
+    },
+    {
+      "date": "2027-01-11",
+      "event": "New Ohio governor takes office (data-center permitting)",
+      "approx": true
+    },
+    {
+      "date": "2027-01-19",
+      "event": "New Texas governor takes office (data-center permitting)",
+      "approx": true
+    },
+    {
+      "date": "2027-01-27",
+      "event": "Hyperscaler Q4 earnings and 2027 capex guidance (from late January)",
+      "approx": true
+    },
+    {
+      "date": "2027-02-25",
+      "event": "Nvidia and CoreWeave earnings; Anthropic's first report as a public company (Feb–Mar)",
+      "approx": true
+    },
+    {
+      "date": null,
+      "event": "Nvidia names a permanent CEO",
+      "approx": true
+    },
+    {
+      "date": null,
+      "event": "OpenAI IPO",
+      "approx": true
+    },
+    {
+      "date": null,
+      "event": "CoreWeave ~$6.2bn of debt due during 2027",
+      "approx": true
+    }
   ],
-
-  "capex": []
+  "capex": [],
+  "weekly_note": {
+    "date": "",
+    "text": ""
+  }
 }

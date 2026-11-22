@@ -3,6 +3,7 @@ else auto-detected from the latest message sent to the bot."""
 from __future__ import annotations
 
 import html
+from datetime import datetime
 import json
 import os
 from pathlib import Path
@@ -113,6 +114,15 @@ def build_message(D: dict, slot: str, url: str | None) -> str:
         soon = [x for x in ai["calendar"] if x["days"] is not None and 0 <= x["days"] <= 14]
         if soon:
             L += ["", "<b>📅 Next two weeks</b>"] + [f"{'❗' if x['days'] <= 3 else '•'} {e(x['date'][5:])} (in {x['days']}d) {e(x['event'])}" for x in soon]
+
+    wn = (D.get("manual") or {}).get("weekly_note") or {}
+    if wn.get("text") and wn.get("date"):
+        try:
+            age = (datetime.now().date() - datetime.fromisoformat(wn["date"]).date()).days
+        except ValueError:
+            age = 99
+        if age <= 2 and slot == "morning":
+            L += ["", f"<b>📰 Weekly news update ({e(wn['date'])})</b>", e(wn["text"])]
 
     an = (D.get("bt") or {}).get("analogs") or {}
     if an.get("matches"):
