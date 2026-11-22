@@ -10,6 +10,7 @@ import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import requests
 
@@ -236,7 +237,8 @@ def twse_breadth(d: date) -> dict:
         for row in rows:
             if not row or len(row) < 2:
                 continue
-            label, cell = str(row[0]), str(row[1])
+            # column 1 = whole market (incl. warrants), column 2 = stocks only
+            label, cell = str(row[0]), str(row[2] if len(row) > 2 else row[1])
             nums = [float(x.replace(",", "")) for x in re.findall(r"[\d,]+", cell)]
             if label.startswith("上漲") and nums:
                 out["tw_adv"] = nums[0]
@@ -290,6 +292,12 @@ def fetch_twse(trading_days: list[date], budget_s: int = 420, maint_days: int = 
             df[c] = pd.Series(dtype="float64")
     tried_path = RAW / "twse_tried.json"
     tried = json.loads(tried_path.read_text()) if tried_path.exists() else {}
+    if "tw_breadth_v" not in df or df["tw_breadth_v"].max() < 2:
+        # v1 parsed the whole-market column (warrants included); refetch as stocks only
+        for c in ["tw_adv", "tw_dec", "tw_limitup", "tw_limitdown"]:
+            df[c] = np.nan
+        df["tw_breadth_v"] = 2.0
+        tried = {k: v for k, v in tried.items() if not k.endswith(":breadth")}
     t0 = time.time()
     days = sorted(set(trading_days), reverse=True)
     today = date.today()
