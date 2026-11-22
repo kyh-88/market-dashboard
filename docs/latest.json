@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-22 21:48",
+ "updated": "2026-11-22 22:00",
  "slot": "evening",
  "scenarios": {
   "A": 46.7,
@@ -17,7 +17,7 @@
   "internals": 55.9207892137033,
   "ai": 100.0,
   "asia": 78.48624395932382,
-  "tw": 91.99271165140367,
+  "tw": 80.65787327956197,
   "aicredit": 39.35088120073812,
   "aichain": 91.62884836056465,
   "airegime": null
@@ -314,9 +314,9 @@
    "asof": "11/20"
   },
   "tw_delever": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 1.1470231390297658,
+   "status": "green",
+   "asof": "11/20"
   },
   "tw_maint": {
    "value": 140.4010741197426,
@@ -329,7 +329,7 @@
    "asof": "11/20"
   },
   "tw_limitdown": {
-   "value": 695.0,
+   "value": 179.0,
    "status": "red",
    "asof": "11/20"
   },
@@ -408,6 +408,7 @@
   "Stocks and gold down for a week (both 5d < −4%)",
   "VIX curve inverted (VIX/VIX3M > 1.05)",
   "TAIEX down ≥ 20%",
+  "TAIEX down ≥ 20%, margin cut ≥ index fall",
   "TAIEX down ≥ 15%, ≥ 100 stocks limit-down"
  ],
  "analogs": [
