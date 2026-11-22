@@ -1,0 +1,354 @@
+{
+ "updated": "2026-11-22 21:34",
+ "slot": "evening",
+ "scenarios": {
+  "A": 0.0,
+  "B": 18.5,
+  "C": 19.9,
+  "D": 26.0
+ },
+ "groups": {
+  "equity": null,
+  "xasset": 26.33569176427248,
+  "credit": 32.98696161382259,
+  "funding": 31.063750000000027,
+  "policy": 72.375,
+  "growth": 12.328125,
+  "internals": null,
+  "ai": null,
+  "asia": null,
+  "tw": null,
+  "aicredit": 20.099999999999998,
+  "aichain": null,
+  "airegime": null
+ },
+ "indicators": {
+  "acwi_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "everything_down": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "stock_bond_corr": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "dollar_1m": {
+   "value": 1.0689467347764436,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "usdjpy_1m": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "gold_1m": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "btc_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "copper_gold": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "kospi_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "n225_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "hsi_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "cny_1m": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "hy_oas": {
+   "value": 3.52,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "hy_oas_chg": {
+   "value": 12.00000000000001,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "ig_oas": {
+   "value": 0.94,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "ccc_oas": {
+   "value": 13.61,
+   "status": "red",
+   "asof": "11/20"
+  },
+  "baa10y": {
+   "value": 1.56,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "hyg_lqd_1m": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "bizd_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "kre_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "sofr_iorb": {
+   "value": 1.000000000000023,
+   "status": "amber",
+   "asof": "11/20"
+  },
+  "srf": {
+   "value": 0.001,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "stlfsi": {
+   "value": -0.8655,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "nfci": {
+   "value": -0.478,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "move": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "vix": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "vix_term": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "fed_path": {
+   "value": 87.99999999999999,
+   "status": "red",
+   "asof": "11/20"
+  },
+  "real10": {
+   "value": 2.88,
+   "status": "red",
+   "asof": "11/20"
+  },
+  "dgs10": {
+   "value": 5.04,
+   "status": "amber",
+   "asof": "11/20"
+  },
+  "breakeven": {
+   "value": 2.18,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "curve": {
+   "value": 60.0,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "claims": {
+   "value": 197.75,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "spx_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "ndx_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "sectors_200": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "rsp_spy_3m": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "sox_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "ai_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "bbb_oas": {
+   "value": 1.17,
+   "status": "green",
+   "asof": "11/20"
+  },
+  "credit_eq_div": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "bizd_hyg_1m": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "owl_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "ai_chain_stage": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "neocloud_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "orcl_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "crwv_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "upstream_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "hyper_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "tw_chain_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "power_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "ant_vs_ipo": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "up_vs_hyper": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "twii_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "twoii_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "tsmc_dd": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "tw_margin": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "tw_margin_5d": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "tw_delever": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "tw_maint": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "tw_foreign_5d": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "tw_limitdown": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  },
+  "twd_1m": {
+   "value": null,
+   "status": "na",
+   "asof": null
+  }
+ },
+ "prices": {},
+ "ai": {
+  "light": "green",
+  "reasons": {
+   "credit": [],
+   "monetize": [],
+   "capex": []
+  },
+  "stage": null
+ },
+ "active_rules": [],
+ "analogs": []
+}
