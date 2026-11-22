@@ -1,0 +1,6 @@
+{
+  "capex_cut_announced": false,
+  "capex": [
+    {"co": "說明", "latest": "這裡記錄 hyperscaler 最新 capex 指引；有公司宣布削減時，把 capex_cut_announced 改為 true，情境 B 會加分", "date": ""}
+  ]
+}
