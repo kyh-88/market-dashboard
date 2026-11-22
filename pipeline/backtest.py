@@ -6,19 +6,19 @@ import numpy as np
 import pandas as pd
 
 EPISODES = [
-    ("1998-07-17", "LTCM / 亞洲金融風暴"),
-    ("2000-03-24", "科網泡沫破裂"),
-    ("2007-10-09", "金融海嘯"),
-    ("2010-04-23", "歐債 / 閃崩"),
-    ("2011-04-29", "美債降評"),
-    ("2015-07-20", "人民幣貶值"),
-    ("2018-01-26", "波動率崩潰"),
-    ("2018-09-20", "2018Q4 升息+縮表"),
-    ("2020-02-19", "新冠流動性危機"),
-    ("2022-01-03", "2022 升息熊市"),
-    ("2023-07-31", "2023 利率衝擊"),
-    ("2024-07-16", "日圓套利平倉"),
-    ("2025-02-19", "2025 關稅"),
+    ("1998-07-17", "LTCM / Asian crisis"),
+    ("2000-03-24", "Dot-com bust"),
+    ("2007-10-09", "Global financial crisis"),
+    ("2010-04-23", "Euro debt / flash crash"),
+    ("2011-04-29", "US downgrade"),
+    ("2015-07-20", "Yuan devaluation"),
+    ("2018-01-26", "Volmageddon"),
+    ("2018-09-20", "2018Q4 hikes + QT"),
+    ("2020-02-19", "Covid liquidity crisis"),
+    ("2022-01-03", "2022 rate-hike bear"),
+    ("2023-07-31", "2023 rate shock"),
+    ("2024-07-16", "Yen carry unwind"),
+    ("2025-02-19", "2025 tariffs"),
 ]
 HORIZONS = {"1M": 21, "3M": 63, "6M": 126, "12M": 252}
 
@@ -76,7 +76,7 @@ def episodes(raw, ind, scen) -> dict:
     cur_dd = (spx.iloc[-1] / last.max() - 1) * 100
     days_in = int((spx.index > peak_d).sum())
     if cur_dd < -5:
-        cur = dict(peak=peak_d, name="本輪（進行中）", days=days_in, dd=cur_dd)
+        cur = dict(peak=peak_d, name="Current (ongoing)", days=days_in, dd=cur_dd)
 
     def snap(t0, t1):
         w = slice(t0, t1)
@@ -141,27 +141,27 @@ def rules(raw, ind) -> list[dict]:
     gold5 = raw["GOLD"].pct_change(5, fill_method=None) * 100
     spx5 = spx.pct_change(5, fill_method=None) * 100
     R = [
-        ("VIX ≥ 35，信用平靜 (Baa 利差 3M 擴 < 0.5)", (ind["vix"] >= 35) & (baa3m < 0.5), "SPX"),
-        ("VIX ≥ 35，信用惡化 (Baa 利差 3M 擴 ≥ 0.5)", (ind["vix"] >= 35) & (baa3m >= 0.5), "SPX"),
-        ("S&P 回撤 ≥ 10%，Fed 升息中 (6M 升 >25bp)", (ind["spx_dd"] <= -10) & (dff6m > 0.25), "SPX"),
-        ("S&P 回撤 ≥ 10%，Fed 降息中 (6M 降 >25bp)", (ind["spx_dd"] <= -10) & (dff6m < -0.25), "SPX"),
-        ("S&P 回撤 ≥ 10%，Fed 按兵不動", (ind["spx_dd"] <= -10) & (dff6m.abs() <= 0.25), "SPX"),
-        ("股債同跌一週 (SPY 5日 < −3% 且 TLT < −1%)", (spy5 < -3) & (tlt5 < -1), "SPX"),
-        ("股金同跌一週 (S&P、黃金 5日都 < −4%)", (spx5 < -4) & (gold5 < -4), "SPX"),
-        ("VIX 期限結構倒掛 (VIX/VIX3M > 1.05)", ind["vix_term"] > 1.05, "SPX"),
-        ("所有 S&P 交易日（基準）", spx.notna(), "SPX"),
-        ("加權指數回撤 ≥ 20%", ind["twii_dd"] <= -20, "TWII"),
-        ("加權回撤 ≥ 20%，融資降幅 ≥ 指數跌幅", (ind["twii_dd"] <= -20) & (ind["tw_delever"] >= 1), "TWII"),
-        ("加權回撤 ≥ 20%，融資降幅 < 指數跌幅", (ind["twii_dd"] <= -20) & (ind["tw_delever"] < 1), "TWII"),
-        ("加權回撤 ≥ 15%，跌停 ≥ 100 家", (ind["twii_dd"] <= -15) & (ind["tw_limitdown"] >= 100), "TWII"),
+        ("VIX ≥ 35, credit calm (Baa spread 3M widening < 0.5)", (ind["vix"] >= 35) & (baa3m < 0.5), "SPX"),
+        ("VIX ≥ 35, credit worsening (Baa spread 3M widening ≥ 0.5)", (ind["vix"] >= 35) & (baa3m >= 0.5), "SPX"),
+        ("S&P down ≥ 10%, Fed hiking (6M +25bp or more)", (ind["spx_dd"] <= -10) & (dff6m > 0.25), "SPX"),
+        ("S&P down ≥ 10%, Fed cutting (6M −25bp or more)", (ind["spx_dd"] <= -10) & (dff6m < -0.25), "SPX"),
+        ("S&P down ≥ 10%, Fed on hold", (ind["spx_dd"] <= -10) & (dff6m.abs() <= 0.25), "SPX"),
+        ("Stocks and bonds down for a week (SPY 5d < −3% and TLT < −1%)", (spy5 < -3) & (tlt5 < -1), "SPX"),
+        ("Stocks and gold down for a week (both 5d < −4%)", (spx5 < -4) & (gold5 < -4), "SPX"),
+        ("VIX curve inverted (VIX/VIX3M > 1.05)", ind["vix_term"] > 1.05, "SPX"),
+        ("All S&P days (baseline)", spx.notna(), "SPX"),
+        ("TAIEX down ≥ 20%", ind["twii_dd"] <= -20, "TWII"),
+        ("TAIEX down ≥ 20%, margin cut ≥ index fall", (ind["twii_dd"] <= -20) & (ind["tw_delever"] >= 1), "TWII"),
+        ("TAIEX down ≥ 20%, margin cut < index fall", (ind["twii_dd"] <= -20) & (ind["tw_delever"] < 1), "TWII"),
+        ("TAIEX down ≥ 15%, ≥ 100 stocks limit-down", (ind["twii_dd"] <= -15) & (ind["tw_limitdown"] >= 100), "TWII"),
     ]
     out = []
     for name, cond, px in R:
-        baseline = name.startswith("所有")
+        baseline = name.startswith("All S&P")
         ev = list(cond[cond.fillna(False)].index[::21]) if baseline else _events(cond)
         fr = fwd_returns(raw[px], ev) if px in raw else pd.DataFrame()
         s = _summ(fr) if len(fr) else {"n": 0}
-        s.update(name=name, asset="S&P 500" if px == "SPX" else "加權指數",
+        s.update(name=name, asset="S&P 500" if px == "SPX" else "TAIEX",
                  active=bool(cond.fillna(False).iloc[-5:].any()),
                  dates=[d.strftime("%Y-%m-%d") for d in (fr["date"] if len(fr) else [])][-12:] if not baseline else [],
                  baseline=baseline)
@@ -184,8 +184,8 @@ def analogs(raw, ind, k=8) -> dict:
         # stock-bond: corr of SPX returns with yield changes (+ = bonds hedge)
         "sb_corr": spx.pct_change(fill_method=None).rolling(63, min_periods=40).corr(y10.diff()),
     })
-    labels = {"spx_dd": "S&P 回撤", "spx_1m": "S&P 1M", "vix": "VIX", "baa_3m": "Baa 利差 3M",
-              "y10_3m": "10Y 3M (bp)", "usd_1m": "美元 1M", "gold_1m": "黃金 1M", "sb_corr": "股−殖利率相關"}
+    labels = {"spx_dd": "S&P DD", "spx_1m": "S&P 1M", "vix": "VIX", "baa_3m": "Baa spread 3M",
+              "y10_3m": "10Y 3M (bp)", "usd_1m": "USD 1M", "gold_1m": "Gold 1M", "sb_corr": "Stock-yield corr"}
     weights = pd.Series({"spx_dd": 1.5, "spx_1m": 1.0, "vix": 1.5, "baa_3m": 1.2, "y10_3m": 1.0,
                          "usd_1m": 0.8, "gold_1m": 0.8, "sb_corr": 0.8})
     f = feats.dropna()

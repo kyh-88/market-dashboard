@@ -129,11 +129,11 @@ def compute(raw: pd.DataFrame) -> pd.DataFrame:
     out["twoii_dd"] = _dd(g("TWOII"))
     out["tsmc_dd"] = _dd(g("TSMC"))
     m = g("tw_margin_amt")
-    out["tw_margin"] = m
+    out["tw_margin"] = m / 10            # 億 -> NT$ bn
     out["tw_margin_5d"] = _chg(m, 5)
     out["tw_delever"] = delever_ratio(g("TWII"), m)
     out["tw_maint"] = g("tw_maint")
-    out["tw_foreign_5d"] = g("tw_foreign").rolling(5, min_periods=4).sum()
+    out["tw_foreign_5d"] = g("tw_foreign").rolling(5, min_periods=4).sum() / 10
     out["tw_limitdown"] = g("tw_limitdown")
     out["twd_1m"] = _chg(g("USDTWD"), 21)
     return out

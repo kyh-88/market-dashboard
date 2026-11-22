@@ -70,10 +70,10 @@ def fetch_fred() -> pd.DataFrame:
             s = pd.to_numeric(s.replace(".", None), errors="coerce").dropna()
             cols[name] = s
         except Exception as e:  # noqa: BLE001
-            log(f"[FRED] {name} ({sid}) 失敗: {e}")
+            log(f"[FRED] {name} ({sid}) failed: {e}")
     df = pd.DataFrame(cols)
     out = _merge_save(RAW / "fred.csv", df)
-    log(f"[FRED] {len(cols)}/{len(C.FRED_SERIES)} 個 series，最新 {out.index.max().date() if len(out) else '-'}")
+    log(f"[FRED] {len(cols)}/{len(C.FRED_SERIES)} series, latest {out.index.max().date() if len(out) else '-'}")
     return out
 
 
@@ -120,15 +120,15 @@ def fetch_yahoo() -> pd.DataFrame:
             if fb:
                 try:
                     cols[name] = _stooq(fb)
-                    log(f"[Yahoo] {name} 改用 stooq")
+                    log(f"[Yahoo] {name} fell back to stooq")
                     continue
                 except Exception as e2:  # noqa: BLE001
                     e = e2
             failed.append(name)
-            log(f"[Yahoo] {name} ({sym}) 失敗: {e}")
+            log(f"[Yahoo] {name} ({sym}) failed: {e}")
         time.sleep(0.4)
     out = _merge_save(path, pd.DataFrame(cols))
-    log(f"[Yahoo] {len(cols)}/{len(C.YAHOO_SERIES)} 檔，最新 {out.index.max().date() if len(out) else '-'}")
+    log(f"[Yahoo] {len(cols)}/{len(C.YAHOO_SERIES)} tickers, latest {out.index.max().date() if len(out) else '-'}")
     return out
 
 
@@ -258,7 +258,7 @@ def fetch_twse(trading_days: list[date], budget_s: int = 420, maint_days: int = 
     n_calls = 0
     for i, d in enumerate(days):
         if time.time() - t0 > budget_s:
-            log(f"[TWSE] 時間預算用完，下次繼續補歷史（已到 {d}）")
+            log(f"[TWSE] time budget used; backfill resumes next run (reached {d})")
             break
         ts = pd.Timestamp(d)
         row = df.loc[ts] if ts in df.index else None
@@ -282,7 +282,7 @@ def fetch_twse(trading_days: list[date], budget_s: int = 420, maint_days: int = 
                 vals = fn(d)
                 n_calls += 1
             except Exception as e:  # noqa: BLE001
-                log(f"[TWSE] {d} {key} 失敗: {e}")
+                log(f"[TWSE] {d} {key} failed: {e}")
                 vals = {}
                 time.sleep(10)
             if vals:
@@ -295,5 +295,5 @@ def fetch_twse(trading_days: list[date], budget_s: int = 420, maint_days: int = 
     df.to_csv(path)
     tried_path.write_text(json.dumps(tried))
     have = df["tw_margin_amt"].notna().sum()
-    log(f"[TWSE] 本次 {n_calls} 次請求；融資歷史 {have} 天（自 {df['tw_margin_amt'].dropna().index.min().date() if have else '-'}）")
+    log(f"[TWSE] {n_calls} requests this run; margin history {have} days (since {df['tw_margin_amt'].dropna().index.min().date() if have else '-'})")
     return df

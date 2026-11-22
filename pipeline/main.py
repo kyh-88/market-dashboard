@@ -37,7 +37,7 @@ def load_raw(do_fetch: bool, twse_budget: int):
     else:
         rd = lambda n: pd.read_csv(fetch.RAW / n, index_col=0, parse_dates=True) if (fetch.RAW / n).exists() else pd.DataFrame()  # noqa: E731
         fred, yahoo, twse = rd("fred.csv"), rd("yahoo.csv"), rd("twse.csv")
-        fetch.log("[cache] 使用既有資料，未重新抓取")
+        fetch.log("[cache] using cached data, no fetch")
     return fred, yahoo, twse
 
 
@@ -57,17 +57,17 @@ def ai_module(raw, cards, manual, today):
             reasons["credit"].append(C.IND_BY_ID[i]["name"])
     stage = cmap.get("ai_chain_stage", {}).get("value")
     if stage is not None and stage >= 3:
-        reasons["credit"].append(f"傳導到第 {stage:.0f} 環")
+        reasons["credit"].append(f"contagion reached link {stage:.0f}")
     for it in b:
         if it["status"] == "red":
             reasons[it.get("pillar", "credit")].append(it["name"])
     for it in manual.get("checklist", []):
         if it.get("status") == "miss":
-            reasons[it.get("pillar", "credit")].append(f'{it["co"]}：{it["item"][:18]}…')
+            reasons[it.get("pillar", "credit")].append(f'{it["co"]}: {it["item"][:40]}…')
     if flags.get("monetization_miss"):
-        reasons["monetize"].append("變現不達標（手動標記）")
+        reasons["monetize"].append("monetization miss (flagged)")
     if flags.get("capex_surprise") or manual.get("capex_cut_announced"):
-        reasons["capex"].append("capex 意外（手動標記）")
+        reasons["capex"].append("capex surprise (flagged)")
     n_bad = sum(1 for v in reasons.values() if v)
     light = "red" if n_bad >= 2 else "amber" if n_bad == 1 else "green"
     cal = []
@@ -187,7 +187,7 @@ def main():
                    active_rules=[r["name"] for r in (D["bt"].get("rules") or []) if r.get("active") and not r.get("baseline")],
                    analogs=(D["bt"].get("analogs") or {}).get("matches", [])[:5])
     (DOCS / "latest.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
-    print(f"[render] docs/index.html 完成；情境 {D['scenarios']['now']}")
+    print(f"[render] docs/index.html done; scenarios {D['scenarios']['now']}")
 
     repo = os.environ.get("GITHUB_REPOSITORY")
     url = os.environ.get("DASHBOARD_URL") or (f"https://{repo.split('/')[0]}.github.io/{repo.split('/')[1]}/" if repo else None)
@@ -195,7 +195,7 @@ def main():
         try:
             telegram.send(telegram.build_message(D, slot, url))
         except Exception as e:  # noqa: BLE001
-            print(f"[Telegram] 推送失敗: {e}")
+            print(f"[Telegram] send failed: {e}")
     else:
         print(telegram.build_message(D, slot, url))
 

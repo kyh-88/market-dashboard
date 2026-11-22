@@ -25,7 +25,7 @@ python -m pipeline.main --no-fetch --no-notify  # 不抓資料、不推送
 ```
 
 ## 檔案
-- `pipeline/config.py` 指標、門檻、情境定義（調整門檻改這裡）
+- `pipeline/config.py` indicators, thresholds, scenarios (edit thresholds here)
 - `pipeline/fetch.py` 數據抓取
 - `pipeline/indicators.py` 指標與評分
 - `pipeline/backtest.py` 回測與歷史類比

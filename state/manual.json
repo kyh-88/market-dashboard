@@ -1,58 +1,58 @@
 {
-  "_說明": "B 層與 C 層沒有免費 API。每週由新聞更新（之後由 Claude 的每週排程任務自動更新）。dir=1 代表數值越高越危險，dir=-1 代表越低越危險。",
+  "_readme": "Layers B and C have no free API. Updated weekly from news (later by Claude's weekly scheduled task). dir=1 means higher is worse; dir=-1 means lower is worse.",
 
   "capex_cut_announced": false,
   "flags": {
     "monetization_miss": false,
     "capex_surprise": false,
-    "_note": "monetization_miss：Anthropic 營收季增 <15% 且算力毛利率沒有從 42% 回升時設為 true。capex_surprise：巨頭 2027 capex 指引出現意外（大砍或大幅上修）時設為 true"
+    "_note": "monetization_miss: set true when Anthropic's revenue grows <15% QoQ AND compute gross margin fails to recover from 42%. capex_surprise: set true when hyperscalers' 2027 capex guidance surprises (sharp cut or sharp raise)."
   },
 
   "b_layer": [
-    {"id": "crwv_cds", "name": "CoreWeave 5 年期 CDS", "value": 1155, "unit": "bp", "date": "2026-11-06",
+    {"id": "crwv_cds", "name": "CoreWeave 5Y CDS", "value": 1155, "unit": "bp", "date": "2026-11-06",
      "amber": 800, "red": 1289, "dir": 1, "pillar": "credit",
-     "note": "11/5 峰值約 1,289bp；再創新高 = 紅燈，低於 800bp = 解除"},
-    {"id": "crwv_bond", "name": "CoreWeave 2031/32 無擔保債殖利率", "value": 15.5, "unit": "%", "date": "2026-11",
+     "note": "Peaked ~1,289bp on 11/5; a new high = red, below 800bp = all clear"},
+    {"id": "crwv_bond", "name": "CoreWeave 2031/32 unsecured bond yield", "value": 15.5, "unit": "%", "date": "2026-11",
      "amber": 16, "red": 18, "dir": 1, "pillar": "credit",
-     "note": "超過 18%，或債券價格跌破 70"},
-    {"id": "orcl_cds", "name": "Oracle 5 年期 CDS", "value": 300, "unit": "bp", "date": "2026-11",
+     "note": "Above 18%, or bond price below 70"},
+    {"id": "orcl_cds", "name": "Oracle 5Y CDS", "value": 300, "unit": "bp", "date": "2026-11",
      "amber": 300, "red": 400, "dir": 1, "pillar": "credit",
-     "note": "看趨勢：持續擴大就是警訊（400bp 紅燈線是暫定值）"},
-    {"id": "ai_ig_gap", "name": "AI 投資級債 − 其他投資級債利差", "value": 71, "unit": "bp", "date": "2026-11-05",
+     "note": "Watch the trend: steady widening is the warning (400bp red line is provisional)"},
+    {"id": "ai_ig_gap", "name": "AI IG bonds − other IG spread gap", "value": 71, "unit": "bp", "date": "2026-11-05",
      "amber": 70, "red": 100, "dir": 1, "pillar": "credit",
-     "note": "11/5：AI 投資級債 148bp，其他投資級債 77bp；兩者差距擴大 = 警訊"},
-    {"id": "gpu_loan", "name": "GPU 有擔保貸款利率（新發 DDTL/ABS）", "value": 10.5, "unit": "%", "date": "2026-11",
+     "note": "11/5: AI IG 148bp vs other IG 77bp; a widening gap is the warning"},
+    {"id": "gpu_loan", "name": "GPU-secured loan rate (new DDTL/ABS)", "value": 10.5, "unit": "%", "date": "2026-11",
      "amber": 12, "red": 15, "dir": 1, "pillar": "credit",
-     "note": "目前 9–12%；超過 15% = 借新還舊斷鏈"},
-    {"id": "h100_rent", "name": "H100 每小時租金", "value": null, "unit": "$/hr", "date": "",
+     "note": "Currently 9–12%; above 15% = refinancing chain breaks"},
+    {"id": "h100_rent", "name": "H100 hourly rental", "value": null, "unit": "$/hr", "date": "",
      "amber": 1.9, "red": 1.65, "dir": -1, "pillar": "credit",
-     "note": "跌破 1.65 美元時，抵押品殘值趨近零"}
+     "note": "Below $1.65, collateral residual value heads toward zero"}
   ],
 
   "checklist": [
-    {"co": "Anthropic", "item": "營收季增率 ≥ 15%（未來 12 個月損益兩平約需 14–18%）", "status": "pending", "pillar": "monetize"},
-    {"co": "Anthropic", "item": "算力毛利率從 42% 回升（Q2 是 52%）", "status": "pending", "pillar": "monetize"},
-    {"co": "CoreWeave", "item": "每季新增通電量重新加速（Q2 約 500MW → Q3 約 200MW）", "status": "pending", "pillar": "credit"},
-    {"co": "CoreWeave", "item": "通電/簽約比回升（目前約 1.7/4.6GW，約 37%）；年底通電超過 1.85GW", "status": "pending", "pillar": "credit"},
-    {"co": "巨頭", "item": "2027 capex 指引：大幅上修 = 利多上游；持平或下修 = 利多巨頭", "status": "pending", "pillar": "capex"},
-    {"co": "巨頭", "item": "10-Q 附註的未起租租約起租時間表（起租當季槓桿比率會跳升）", "status": "pending", "pillar": "capex"},
-    {"co": "輝達", "item": "1,180 億擔保是否實際付款（其中 1,050 億是 OpenAI 俄亥俄園區）", "status": "pending", "pillar": "credit"},
-    {"co": "輝達", "item": "Neocloud 承諾的趨勢（360 億 → 320 億）；採購義務的損失提列", "status": "pending", "pillar": "capex"},
-    {"co": "OpenAI", "item": "年化營收消息、IPO 時程（ORCL、CRWV、輝達擔保背後最大的交易對手）", "status": "pending", "pillar": "monetize"},
-    {"co": "AI 模型", "item": "主要模型 API 再降價 = 價格戰加劇", "status": "pending", "pillar": "monetize"}
+    {"co": "Anthropic", "item": "Revenue growth ≥ 15% QoQ (breakeven within 12 months needs ~14–18%)", "status": "pending", "pillar": "monetize"},
+    {"co": "Anthropic", "item": "Compute gross margin recovers from 42% (was 52% in Q2)", "status": "pending", "pillar": "monetize"},
+    {"co": "CoreWeave", "item": "Quarterly newly powered capacity re-accelerates (Q2 ~500MW → Q3 ~200MW)", "status": "pending", "pillar": "credit"},
+    {"co": "CoreWeave", "item": "Powered/contracted ratio improves (now ~1.7/4.6GW, ~37%); powered >1.85GW by year-end", "status": "pending", "pillar": "credit"},
+    {"co": "Hyperscalers", "item": "2027 capex guidance: big raise = bullish upstream; flat or cut = bullish hyperscalers", "status": "pending", "pillar": "capex"},
+    {"co": "Hyperscalers", "item": "10-Q footnotes: commencement schedule of not-yet-commenced leases (leverage jumps the quarter they start)", "status": "pending", "pillar": "capex"},
+    {"co": "Nvidia", "item": "Whether any of the $118bn of guarantees is actually paid out ($105bn is OpenAI's Ohio campus)", "status": "pending", "pillar": "credit"},
+    {"co": "Nvidia", "item": "Trend in neocloud commitments ($36bn → $32bn); losses on purchase obligations", "status": "pending", "pillar": "capex"},
+    {"co": "OpenAI", "item": "Annualized revenue news and IPO timing (largest counterparty behind ORCL, CRWV and Nvidia's guarantees)", "status": "pending", "pillar": "monetize"},
+    {"co": "AI models", "item": "Another round of major API price cuts = price war intensifying", "status": "pending", "pillar": "monetize"}
   ],
 
   "calendar": [
-    {"date": "2026-12-09", "event": "FOMC（市場已定價升息一碼）", "approx": false},
-    {"date": "2026-12-15", "event": "ERCOT 資料中心衝擊審查報告（12 月中旬）", "approx": true},
-    {"date": "2026-12-31", "event": "CoreWeave 年底約 44 億美元債務到期", "approx": true},
-    {"date": "2027-01-11", "event": "俄亥俄州新州長就任（資料中心審批動向）", "approx": true},
-    {"date": "2027-01-19", "event": "德州新州長就任（資料中心審批動向）", "approx": true},
-    {"date": "2027-01-27", "event": "巨頭 Q4 財報與 2027 capex 指引（月底起）", "approx": true},
-    {"date": "2027-02-25", "event": "輝達、CoreWeave 財報；Anthropic 上市後首份財報（2–3 月）", "approx": true},
-    {"date": null, "event": "輝達正式 CEO 人選", "approx": true},
+    {"date": "2026-12-09", "event": "FOMC (a 25bp hike is priced)", "approx": false},
+    {"date": "2026-12-15", "event": "ERCOT data-center impact review report (mid-December)", "approx": true},
+    {"date": "2026-12-31", "event": "CoreWeave ~$4.4bn debt due by year-end", "approx": true},
+    {"date": "2027-01-11", "event": "New Ohio governor takes office (data-center permitting)", "approx": true},
+    {"date": "2027-01-19", "event": "New Texas governor takes office (data-center permitting)", "approx": true},
+    {"date": "2027-01-27", "event": "Hyperscaler Q4 earnings and 2027 capex guidance (from late January)", "approx": true},
+    {"date": "2027-02-25", "event": "Nvidia and CoreWeave earnings; Anthropic's first report as a public company (Feb–Mar)", "approx": true},
+    {"date": null, "event": "Nvidia names a permanent CEO", "approx": true},
     {"date": null, "event": "OpenAI IPO", "approx": true},
-    {"date": null, "event": "CoreWeave 2027 全年約 62 億美元債務到期", "approx": true}
+    {"date": null, "event": "CoreWeave ~$6.2bn of debt due during 2027", "approx": true}
   ],
 
   "capex": []
