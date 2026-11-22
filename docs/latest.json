@@ -1,42 +1,42 @@
 {
- "updated": "2026-11-22 21:34",
+ "updated": "2026-11-22 21:48",
  "slot": "evening",
  "scenarios": {
-  "A": 0.0,
-  "B": 18.5,
-  "C": 19.9,
-  "D": 26.0
+  "A": 46.7,
+  "B": 67.8,
+  "C": 33.5,
+  "D": 28.2
  },
  "groups": {
-  "equity": null,
-  "xasset": 26.33569176427248,
-  "credit": 32.98696161382259,
-  "funding": 31.063750000000027,
+  "equity": 84.0601520053432,
+  "xasset": 32.83464398048092,
+  "credit": 33.112133088885585,
+  "funding": 30.481999755859402,
   "policy": 72.375,
-  "growth": 12.328125,
-  "internals": null,
-  "ai": null,
-  "asia": null,
-  "tw": null,
-  "aicredit": 20.099999999999998,
-  "aichain": null,
+  "growth": 10.500547674822142,
+  "internals": 55.9207892137033,
+  "ai": 100.0,
+  "asia": 78.48624395932382,
+  "tw": 91.99271165140367,
+  "aicredit": 39.35088120073812,
+  "aichain": 91.62884836056465,
   "airegime": null
  },
  "indicators": {
   "acwi_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -12.241506593218876,
+   "status": "amber",
+   "asof": "11/20"
   },
   "everything_down": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 0.0,
+   "status": "green",
+   "asof": "11/20"
   },
   "stock_bond_corr": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -0.23049970806784456,
+   "status": "green",
+   "asof": "11/20"
   },
   "dollar_1m": {
    "value": 1.0689467347764436,
@@ -44,44 +44,44 @@
    "asof": "11/20"
   },
   "usdjpy_1m": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 0.9960013852678085,
+   "status": "green",
+   "asof": "11/20"
   },
   "gold_1m": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -13.422323246668743,
+   "status": "red",
+   "asof": "11/20"
   },
   "btc_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -39.33829769982221,
+   "status": "amber",
+   "asof": "11/20"
   },
   "copper_gold": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 9.169445128842035,
+   "status": "green",
+   "asof": "11/20"
   },
   "kospi_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -46.56938559452558,
+   "status": "red",
+   "asof": "11/20"
   },
   "n225_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -22.012574474580937,
+   "status": "red",
+   "asof": "11/20"
   },
   "hsi_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -19.870105872610676,
+   "status": "amber",
+   "asof": "11/20"
   },
   "cny_1m": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -0.17070854937291102,
+   "status": "green",
+   "asof": "11/20"
   },
   "hy_oas": {
    "value": 3.52,
@@ -109,19 +109,19 @@
    "asof": "11/20"
   },
   "hyg_lqd_1m": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -0.30100192721025376,
+   "status": "green",
+   "asof": "11/20"
   },
   "bizd_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -10.698445446001713,
+   "status": "amber",
+   "asof": "11/20"
   },
   "kre_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -11.832263847506363,
+   "status": "green",
+   "asof": "11/20"
   },
   "sofr_iorb": {
    "value": 1.000000000000023,
@@ -144,19 +144,19 @@
    "asof": "11/20"
   },
   "move": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 106.30999755859375,
+   "status": "green",
+   "asof": "11/20"
   },
   "vix": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 35.88999938964844,
+   "status": "red",
+   "asof": "11/20"
   },
   "vix_term": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 1.1599870320022148,
+   "status": "red",
+   "asof": "11/20"
   },
   "fed_path": {
    "value": 87.99999999999999,
@@ -189,34 +189,34 @@
    "asof": "11/20"
   },
   "spx_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -11.61974872056868,
+   "status": "amber",
+   "asof": "11/20"
   },
   "ndx_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -19.84177824271316,
+   "status": "amber",
+   "asof": "11/20"
   },
   "sectors_200": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 4.0,
+   "status": "amber",
+   "asof": "11/20"
   },
   "rsp_spy_3m": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 3.6021986917528768,
+   "status": "green",
+   "asof": "11/20"
   },
   "sox_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -42.54355395349232,
+   "status": "red",
+   "asof": "11/20"
   },
   "ai_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -32.352444987098174,
+   "status": "red",
+   "asof": "11/20"
   },
   "bbb_oas": {
    "value": 1.17,
@@ -224,74 +224,74 @@
    "asof": "11/20"
   },
   "credit_eq_div": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 0.0,
+   "status": "green",
+   "asof": "11/20"
   },
   "bizd_hyg_1m": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -0.6775519456988954,
+   "status": "green",
+   "asof": "11/20"
   },
   "owl_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -42.566306029783206,
+   "status": "amber",
+   "asof": "11/20"
   },
   "ai_chain_stage": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 4.0,
+   "status": "red",
+   "asof": "11/20"
   },
   "neocloud_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -71.50188585905192,
+   "status": "red",
+   "asof": "11/20"
   },
   "orcl_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -58.92903658453656,
+   "status": "red",
+   "asof": "11/20"
   },
   "crwv_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -71.36541560738176,
+   "status": "red",
+   "asof": "11/20"
   },
   "upstream_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -46.65209369051784,
+   "status": "red",
+   "asof": "11/20"
   },
   "hyper_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -21.913988577889654,
+   "status": "red",
+   "asof": "11/20"
   },
   "tw_chain_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -32.94443647938895,
+   "status": "red",
+   "asof": "11/20"
   },
   "power_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -48.117431665056046,
+   "status": "red",
+   "asof": "11/20"
   },
   "ant_vs_ipo": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 7.120486339890819,
+   "status": "green",
+   "asof": "11/20"
   },
   "up_vs_hyper": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -24.458761734218726,
+   "status": "info",
+   "asof": "11/20"
   },
   "twii_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -27.67674778293244,
+   "status": "red",
+   "asof": "11/20"
   },
   "twoii_dd": {
    "value": null,
@@ -299,19 +299,19 @@
    "asof": null
   },
   "tsmc_dd": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -22.630560928433276,
+   "status": "amber",
+   "asof": "11/20"
   },
   "tw_margin": {
-   "value": null,
+   "value": 435.22726700000004,
    "status": "na",
-   "asof": null
+   "asof": "11/20"
   },
   "tw_margin_5d": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": -18.89151539841474,
+   "status": "red",
+   "asof": "11/20"
   },
   "tw_delever": {
    "value": null,
@@ -319,36 +319,202 @@
    "asof": null
   },
   "tw_maint": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 140.4010741197426,
+   "status": "red",
+   "asof": "11/20"
   },
   "tw_foreign_5d": {
-   "value": null,
+   "value": -218.66927785200005,
    "status": "na",
-   "asof": null
+   "asof": "11/20"
   },
   "tw_limitdown": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 695.0,
+   "status": "red",
+   "asof": "11/20"
   },
   "twd_1m": {
-   "value": null,
-   "status": "na",
-   "asof": null
+   "value": 2.040420407692789,
+   "status": "amber",
+   "asof": "11/20"
   }
  },
- "prices": {},
+ "prices": {
+  "SPX": {
+   "level": 6910.39013671875,
+   "chg1d": -3.6990834302978337,
+   "date": "11/20"
+  },
+  "NDX": {
+   "level": 25028.98046875,
+   "chg1d": -5.611748926287852,
+   "date": "11/20"
+  },
+  "SOX": {
+   "level": 8408.58984375,
+   "chg1d": -10.734182249194024,
+   "date": "11/20"
+  },
+  "GOLD": {
+   "level": 3515.39990234375,
+   "chg1d": -4.615387265126847,
+   "date": "11/20"
+  },
+  "BTC": {
+   "level": 58798.98046875,
+   "chg1d": -5.012517932567862,
+   "date": "11/20"
+  },
+  "N225": {
+   "level": 56436.6484375,
+   "chg1d": -5.059470808960976,
+   "date": "11/20"
+  },
+  "KOSPI": {
+   "level": 4869.9599609375,
+   "chg1d": -5.214789897246819,
+   "date": "11/20"
+  },
+  "HSI": {
+   "level": 22410.80078125,
+   "chg1d": -1.8861112985145922,
+   "date": "11/20"
+  },
+  "TWII": {
+   "level": 36033.2890625,
+   "chg1d": -6.228975396054437,
+   "date": "11/20"
+  },
+  "TSMC": {
+   "level": 2000.0,
+   "chg1d": -4.761904761904767,
+   "date": "11/20"
+  }
+ },
  "ai": {
-  "light": "green",
+  "light": "amber",
   "reasons": {
-   "credit": [],
+   "credit": [
+    "contagion reached link 4"
+   ],
    "monetize": [],
    "capex": []
   },
-  "stage": null
+  "stage": 4.0
  },
- "active_rules": [],
- "analogs": []
+ "active_rules": [
+  "VIX ≥ 35, credit calm (Baa spread 3M widening < 0.5)",
+  "S&P down ≥ 10%, Fed hiking (6M +25bp or more)",
+  "Stocks and gold down for a week (both 5d < −4%)",
+  "VIX curve inverted (VIX/VIX3M > 1.05)",
+  "TAIEX down ≥ 20%",
+  "TAIEX down ≥ 15%, ≥ 100 stocks limit-down"
+ ],
+ "analogs": [
+  {
+   "date": "2022-05-13",
+   "dist": 2.2229929679421754,
+   "feat": {
+    "spx_dd": -16.108839597062307,
+    "spx_1m": -8.393680363680666,
+    "vix": 28.8700008392334,
+    "baa_3m": 0.2500000000000002,
+    "y10_3m": 88.00000000000003,
+    "usd_1m": 4.226473162547562,
+    "gold_1m": -8.440937322467557,
+    "sb_corr": 0.07816303625395682
+   },
+   "fwd": {
+    "1M": -7.167440457089381,
+    "3M": 6.790698837078568,
+    "6M": -0.7694037800240028,
+    "12M": 2.1374841772948683,
+    "maxDD6M": -11.10517124500504
+   }
+  },
+  {
+   "date": "2022-09-15",
+   "dist": 2.3990474504381774,
+   "feat": {
+    "spx_dd": -18.663582859420224,
+    "spx_1m": -8.719851428626269,
+    "vix": 26.270000457763672,
+    "baa_3m": -0.009999999999999787,
+    "y10_3m": 20.000000000000018,
+    "usd_1m": 2.97456899504831,
+    "gold_1m": -5.5946364088200635,
+    "sb_corr": -0.10159192246600024
+   },
+   "fwd": {
+    "1M": -8.158202194878205,
+    "3M": 2.408652603609651,
+    "6M": 0.3919103525484857,
+    "12M": 14.153553864128309,
+    "maxDD6M": -8.313021396213871
+   }
+  },
+  {
+   "date": "2006-06-13",
+   "dist": 2.438218516494711,
+   "feat": {
+    "spx_dd": -7.698985307108453,
+    "spx_1m": -5.470070188779452,
+    "vix": 23.809999465942383,
+    "baa_3m": -0.050000000000000044,
+    "y10_3m": 31.99999999999994,
+    "usd_1m": 2.2356273588604925,
+    "gold_1m": -17.71503509521609,
+    "sb_corr": -0.26147588753993334
+   },
+   "fwd": {
+    "1M": 1.5191828633699167,
+    "3M": 7.298422220510847,
+    "6M": 15.473698953400827,
+    "12M": 24.45717817643789,
+    "maxDD6M": 0.0
+   }
+  },
+  {
+   "date": "2020-09-24",
+   "dist": 2.5357805396086968,
+   "feat": {
+    "spx_dd": -9.334401754782007,
+    "spx_1m": -6.673121911774382,
+    "vix": 28.510000228881836,
+    "baa_3m": -0.23999999999999977,
+    "y10_3m": 3.0000000000000027,
+    "usd_1m": 1.440701330087002,
+    "gold_1m": -3.871957776488477,
+    "sb_corr": 0.2620034256884193
+   },
+   "fwd": {
+    "1M": 6.7393726575952995,
+    "3M": 13.658019949266187,
+    "6M": 22.421985266542798,
+    "12M": 37.23567989340979,
+    "maxDD6M": 0.0
+   }
+  },
+  {
+   "date": "2010-02-08",
+   "dist": 2.5365743631408817,
+   "feat": {
+    "spx_dd": -8.127938918465272,
+    "spx_1m": -7.706684111476769,
+    "vix": 26.510000228881836,
+    "baa_3m": -0.2799999999999998,
+    "y10_3m": 12.00000000000001,
+    "usd_1m": 3.653029284190068,
+    "gold_1m": -6.36970682746516,
+    "sb_corr": 0.4308338028998396
+   },
+   "fwd": {
+    "1M": 8.409826063029646,
+    "3M": 9.746010483764579,
+    "6M": 6.723512830470879,
+    "12M": 24.822573293130713,
+    "maxDD6M": -3.232580716184963
+   }
+  }
+ ]
 }
