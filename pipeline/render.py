@@ -7,7 +7,7 @@ import math
 
 from . import config as C
 
-ST_LABEL = {"green": ("●", "正常"), "amber": ("▲", "警戒"), "red": ("■", "危險"), "na": ("○", "無資料")}
+ST_LABEL = {"green": ("●", "正常"), "amber": ("▲", "警戒"), "red": ("■", "危險"), "na": ("○", "無資料"), "info": ("◆", "觀察")}
 
 CSS = """
 :root{--bg:#fcfcfb;--card:#ffffff;--ink:#0b0b0b;--ink2:#52514e;--ink3:#8a8984;--line:#e6e5e0;
@@ -44,6 +44,10 @@ ul.alerts{margin:0;padding-left:18px}ul.alerts li{margin:3px 0}
 .muted{color:var(--ink3);font-size:12px}.legend{font-size:12px;color:var(--ink2);margin:4px}
 #tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:11px;padding:3px 6px;border-radius:4px;display:none;z-index:9}
 .active{color:var(--crit);font-weight:600}
+.chain{display:flex;gap:4px;align-items:stretch;overflow-x:auto}.chain .lk{flex:1;min-width:64px;border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center;font-size:12px}
+.chain .lk.hit{border-color:var(--crit);border-width:2px}.chain .ar{align-self:center;color:var(--ink3)}
+.chain .lk b{display:block;font-size:13px}.big{font-size:22px;font-weight:700}
+.pill{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:13px;margin-top:8px}
 """
 
 JS = """
@@ -153,6 +157,11 @@ def render(D: dict) -> str:
                   f'{sparkline(sc["hist"][k], sc["hist_d"], None)}<div class="muted">{esc(dtxt)}</div>'
                   f'<div class="ds">{esc(meta["desc"])}</div></div>')
     ov.append('</div><p class="legend">分數 0–100，由各層指標的壓力加權計算（公式見「回測」頁的方法說明）。它是壓力的相對強弱，不是機率。</p>')
+    if D.get("ai"):
+        ai0 = D["ai"]
+        lb0 = {"green": "綠燈", "amber": "黃燈", "red": "紅燈"}[ai0["light"]]
+        ov.append(f'<div class="card s-{ai0["light"]}" style="margin-top:8px"><b>AI 資金鏈：{chip(ai0["light"]).replace(ST_LABEL[ai0["light"]][1], lb0)}</b> '
+                  f'{ai0["n_bad"]}/3 個支柱轉壞 · 傳導到第 {ai0["stage"] or 0:.0f}/4 環 <span class="muted">（詳見 AI 資金鏈頁）</span></div>')
     ov.append('<h2>各層壓力</h2><div class="card heat">')
     for gk, gv in D["groups"].items():
         if gv is None:
@@ -194,6 +203,44 @@ def render(D: dict) -> str:
                 continue
             parts.append(f'<h2>{esc(C.GROUP_NAMES[gk])}</h2><div class="grid">' + "".join(ind_card(cards[i]) for i in ids if i in cards) + "</div>")
         secs[sk] = "".join(parts)
+
+    # ---------------- AI funding chain extras (prepended to the AI tab)
+    ai = D.get("ai")
+    if ai:
+        ic, lb = {"green": ("●", "綠燈"), "amber": ("▲", "黃燈"), "red": ("■", "紅燈")}[ai["light"]]
+        P = [f'<h2>AI 資金鏈綜合燈號</h2><div class="card s-{ai["light"]}"><div class="big"><span class="chip s-{ai["light"]}" style="font-size:16px"><span class="ic">{ic}</span>{lb}</span> {ai["n_bad"]}/3 個支柱轉壞</div>'
+             '<div class="pill">']
+        for k, nm in (("credit", "信用警報"), ("monetize", "源頭變現"), ("capex", "capex 意外")):
+            r = ai["reasons"][k]
+            P.append(f'<div>{chip("red" if r else "green")}</div><div><b>{nm}</b>：{esc("、".join(r)) if r else "未觸發"}</div>')
+        P.append('</div><p class="muted">只有一個支柱轉壞 = 黃燈；兩個以上同時發生 = 紅燈（「多個利空同時發生才會引爆」）。信用指標是警報器，Anthropic 財報是判決，巨頭 2027 capex 指引決定該押上游還是押巨頭。</p></div>')
+        P.append(f'<h2>風險傳導鏈：第 {ai["stage"] or 0:.0f}/4 環</h2><div class="card"><div class="muted" style="margin-bottom:6px">各環節 20 日報酬</div><div class="chain">')
+        for i, l in enumerate(ai["chain"]):
+            if i:
+                P.append('<div class="ar">→</div>')
+            r20 = "—" if l["r20"] is None else f'{l["r20"]:+.1f}%'
+            r5 = "—" if l["r5"] is None else f'{l["r5"]:+.1f}%'
+            P.append(f'<div class="lk{" hit" if l["hit"] else ""}"><b>{esc(l["name"])}</b>{r20}<div class="muted">5日 {r5}</div><div class="muted">門檻 {l["th"]:.0f}%</div></div>')
+        P.append('</div><p class="muted">由最弱的環節往最強的依序檢查：前面的環節都跌破門檻，才往下一環計算。依序擴散 = 傳導中；只有巨頭跌、上游沒跌，就不是這種傳導。</p></div>')
+        secs["ai"] = "".join(P) + secs["ai"]
+        Q = ['<h2>B 層：手動 / 新聞更新的信用指標</h2><div class="card tbl"><table><tr><th>指標</th><th>數值</th><th>資料日</th><th>燈號</th><th>門檻</th></tr>']
+        for it in ai["b_layer"]:
+            v = "—" if it.get("value") is None else f'{it["value"]:,}{esc(it["unit"])}'
+            Q.append(f'<tr><td>{esc(it["name"])}<div class="muted">{esc(it.get("note", ""))}</div></td><td>{v}</td><td>{esc(it.get("date") or "—")}</td>'
+                     f'<td>{chip(it["status"])}</td><td>{it["amber"]} / {it["red"]}</td></tr>')
+        Q.append('</table><p class="muted">沒有免費 API，每週從新聞更新。資料日超過兩週的請當成過期資料。</p></div>')
+        Q.append('<h2>C 層：每季財報檢查清單</h2><div class="card"><ul class="alerts">')
+        stl = {"pending": ("○", "待確認"), "ok": ("●", "達標"), "miss": ("■", "未達標")}
+        for it in ai["checklist"]:
+            icn, lbl = stl.get(it.get("status", "pending"), ("○", "待確認"))
+            cls = {"ok": "green", "miss": "red"}.get(it.get("status"), "na")
+            Q.append(f'<li><span class="chip s-{cls}"><span class="ic">{icn}</span>{lbl}</span> <b>{esc(it["co"])}</b>：{esc(it["item"])}</li>')
+        Q.append('</ul></div><h2>行事曆</h2><div class="card"><ul class="alerts">')
+        for ev in ai["calendar"]:
+            when = "時間待定" if ev["days"] is None else ("今天" if ev["days"] == 0 else f'{ev["days"]} 天後' if ev["days"] > 0 else "昨天")
+            Q.append(f'<li><b>{esc(ev.get("date") or "待定")}</b>{"（約）" if ev.get("approx") and ev.get("date") else ""} · {when}：{esc(ev["event"])}</li>')
+        Q.append("</ul></div>")
+        secs["ai"] += "".join(Q)
 
     # ---------------- backtest
     bt = D.get("bt") or {}
@@ -248,7 +295,7 @@ def render(D: dict) -> str:
     B.append('<h2>數據狀態</h2><div class="card muted"><ul class="alerts">' + "".join(f"<li>{esc(x)}</li>" for x in D["log"]) + "</ul></div>")
 
     tabs = [("ov", "總覽", "".join(ov)), ("global", "全球", secs["global"]), ("us", "美國", secs["us"]),
-            ("tw", "台股", secs["tw"]), ("bt", "回測", "".join(B))]
+            ("ai", "AI 資金鏈", secs["ai"]), ("tw", "台股", secs["tw"]), ("bt", "回測", "".join(B))]
     nav = "".join(f'<a href="#{t}" data-t="{t}" class="{"on" if i == 0 else ""}">{n}</a>' for i, (t, n, _) in enumerate(tabs))
     body = "".join(f'<section id="{t}" class="{"on" if i == 0 else ""}">{c}</section>' for i, (t, _, c) in enumerate(tabs))
     return (f'<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'

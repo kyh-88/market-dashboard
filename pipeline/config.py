@@ -28,6 +28,7 @@ FRED_SERIES = {
     "NFCI": "NFCI",
     "ICSA": "ICSA",
     "USD_BROAD": "DTWEXBGS",
+    "BBB_OAS": "BAMLC0A4CBBB",   # ICE BofA BBB OAS (Oracle's rating bucket)
 }
 
 YAHOO_SERIES = {
@@ -41,6 +42,11 @@ YAHOO_SERIES = {
     "ORCL": "ORCL", "CRWV": "CRWV", "BIZD": "BIZD", "KRE": "KRE",
     "XLK": "XLK", "XLF": "XLF", "XLE": "XLE", "XLV": "XLV", "XLY": "XLY", "XLP": "XLP",
     "XLI": "XLI", "XLB": "XLB", "XLU": "XLU", "XLRE": "XLRE", "XLC": "XLC",
+    # ---- AI funding chain module
+    "NBIS": "NBIS", "ANT": "ANT", "AVGO": "AVGO", "TSM": "TSM", "MU": "MU",
+    "SKHYNIX": "000660.KS", "SAMSUNG": "005930.KS",
+    "HONHAI": "2317.TW", "QUANTA": "2382.TW", "WIWYNN": "6669.TW", "WISTRON": "3231.TW",
+    "GEV": "GEV", "VRT": "VRT", "OWL": "OWL", "SMH": "SMH",
 }
 
 # stooq fallback symbols for the most important tickers
@@ -55,6 +61,21 @@ STOOQ_FALLBACK = {
 
 SECTOR_ETFS = ["XLK", "XLF", "XLE", "XLV", "XLY", "XLP", "XLI", "XLB", "XLU", "XLRE", "XLC"]
 AI_BASKET = ["NVDA", "MSFT", "META", "GOOGL", "AMZN", "ORCL"]
+
+# AI funding chain: risk travels left -> right (weakest balance sheet first)
+NEOCLOUD = ["CRWV", "NBIS"]
+HYPERSCALERS = ["MSFT", "GOOGL", "AMZN", "META"]
+UPSTREAM = ["NVDA", "AVGO", "TSM", "MU", "SKHYNIX", "SAMSUNG"]
+TW_CHAIN = ["TSMC", "HONHAI", "QUANTA", "WIWYNN", "WISTRON"]
+POWER = ["GEV", "VRT"]
+ANT_IPO_PRICE = 83.0
+# (name, members, 20-day return that counts as "this link has cracked", %)
+CHAIN_LINKS = [
+    ("Neocloud", NEOCLOUD, -15.0),
+    ("Oracle", ["ORCL"], -10.0),
+    ("輝達/記憶體", ["NVDA", "MU", "SKHYNIX"], -8.0),
+    ("巨頭", HYPERSCALERS, -6.0),
+]
 
 # ---------------------------------------------------------------- indicators
 # dir  +1: higher = more stress, -1: lower = more stress
@@ -128,8 +149,34 @@ IND = [
     dict(id="sox_dd", sec="us", grp="ai", name="費城半導體回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-20, red=-35, note=""),
     dict(id="ai_dd", sec="us", grp="ai", name="AI 龍頭籃子平均回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-15, red=-30,
          note="NVDA、MSFT、META、GOOGL、AMZN、ORCL"),
-    dict(id="orcl_dd", sec="us", grp="ai", name="Oracle 回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-30, red=-50, note="舉債建 AI 的代表"),
-    dict(id="crwv_dd", sec="us", grp="ai", name="CoreWeave 回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-40, red=-65, note="AI 算力租賃 + 高槓桿"),
+
+    # ---- AI funding chain: credit (the alarm)
+    dict(id="bbb_oas", sec="ai", grp="aicredit", name="BBB 級利差", unit="%", fmt="{:.2f}", dir=1, mode="abs", amber=1.5, red=2.0,
+         note="Oracle 所在的評級（BBB-）；巨頭發債的成本"),
+    dict(id="credit_eq_div", sec="ai", grp="aicredit", name="信用與股票背離天數 (10日)", unit="天", fmt="{:.0f}", dir=1, mode="abs", amber=1, red=4,
+         note="HYG 20日下跌、但 Neocloud 20日大漲；這種背離通常債券是對的"),
+    dict(id="bizd_hyg_1m", sec="ai", grp="aicredit", name="私募信貸 vs 高收益債 (1M)", unit="%", fmt="{:+.1f}", dir=-1, mode="abs", amber=-3, red=-6,
+         note="BDC ETF 相對 HYG；負值 = 私募信貸壓力比公開市場大"),
+    dict(id="owl_dd", sec="ai", grp="aicredit", name="Blue Owl 回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-25, red=-45,
+         note="資料中心融資的主要私募信貸方"),
+    # ---- AI funding chain: transmission
+    dict(id="ai_chain_stage", sec="ai", grp="aichain", name="風險傳導進度", unit="/4", fmt="{:.0f}", dir=1, mode="abs", amber=2, red=3,
+         note="Neocloud → Oracle → 輝達/記憶體 → 巨頭，依序跌破門檻的環節數"),
+    dict(id="neocloud_dd", sec="ai", grp="aichain", name="Neocloud 回撤 (CRWV、NBIS)", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-30, red=-50,
+         note="最弱的一環"),
+    dict(id="orcl_dd", sec="ai", grp="aichain", name="Oracle 回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-30, red=-50, note="舉債建 AI 的代表"),
+    dict(id="crwv_dd", sec="ai", grp="aichain", name="CoreWeave 回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-40, red=-65, note="AI 算力租賃 + 高槓桿"),
+    dict(id="upstream_dd", sec="ai", grp="aichain", name="上游籃子回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-15, red=-30,
+         note="NVDA、AVGO、TSM、MU、SK 海力士、三星"),
+    dict(id="hyper_dd", sec="ai", grp="aichain", name="巨頭籃子回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-10, red=-20,
+         note="MSFT、GOOGL、AMZN、META（現金最充足，最後才跌）"),
+    dict(id="tw_chain_dd", sec="ai", grp="aichain", name="台股 AI 供應鏈回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-15, red=-30,
+         note="台積電、鴻海、廣達、緯穎、緯創"),
+    dict(id="power_dd", sec="ai", grp="aichain", name="電力瓶頸股回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-20, red=-35, note="GEV、VRT"),
+    dict(id="ant_vs_ipo", sec="ai", grp="aichain", name="Anthropic 相對 IPO 價", unit="%", fmt="{:+.1f}", dir=-1, mode="abs", amber=0, red=-20,
+         note="IPO 價 $83；跌破 = 一級市場資金承接力轉弱"),
+    dict(id="up_vs_hyper", sec="ai", grp="airegime", name="上游 ÷ 巨頭 (3M 變化)", unit="%", fmt="{:+.1f}", dir=1, mode="info", amber=None, red=None,
+         note="上升 = 市場押 capex 繼續增加；下降 = 押 capex 見頂、巨頭現金流修復"),
 
     # ---- Taiwan
     dict(id="twii_dd", sec="tw", grp="tw", name="加權指數回撤", unit="%", fmt="{:.1f}", dir=-1, mode="abs", amber=-10, red=-20, note=""),
@@ -151,6 +198,7 @@ GROUP_NAMES = {
     "equity": "股市壓力", "xasset": "跨資產/流動性", "credit": "信用", "funding": "資金市場",
     "policy": "政策/利率", "growth": "增長", "internals": "市場內部", "ai": "AI 交易",
     "asia": "亞洲", "tw": "台股",
+    "aicredit": "AI 信用（警報器）", "aichain": "AI 傳導鏈", "airegime": "資金押注方向",
 }
 
 SCENARIOS = {
@@ -160,4 +208,4 @@ SCENARIOS = {
     "D": dict(name="流動性危機", analog="2008/9、2020/3", desc="連美債都賣、美元急漲、資金市場失靈"),
 }
 
-SECTIONS = {"global": "全球", "us": "美國", "tw": "台股"}
+SECTIONS = {"global": "全球", "us": "美國", "ai": "AI 資金鏈", "tw": "台股"}

@@ -41,6 +41,46 @@ def load_raw(do_fetch: bool, twse_budget: int):
     return fred, yahoo, twse
 
 
+def ai_module(raw, cards, manual, today):
+    """AI funding-chain composite: three pillars (credit alarm / monetization /
+    capex surprise). Red when two or more fail at once."""
+    cmap = {c["id"]: c for c in cards}
+    flags = manual.get("flags", {})
+    b = []
+    for it in manual.get("b_layer", []):
+        v = it.get("value")
+        stv = I.stress_value({"dir": it["dir"]}, float(v), it["amber"], it["red"]) if v is not None else float("nan")
+        b.append(dict(it, status=I.status_of(stv)))
+    reasons = {"credit": [], "monetize": [], "capex": []}
+    for i in ("bbb_oas", "credit_eq_div", "bizd_hyg_1m", "owl_dd"):
+        if cmap.get(i, {}).get("status") == "red":
+            reasons["credit"].append(C.IND_BY_ID[i]["name"])
+    stage = cmap.get("ai_chain_stage", {}).get("value")
+    if stage is not None and stage >= 3:
+        reasons["credit"].append(f"傳導到第 {stage:.0f} 環")
+    for it in b:
+        if it["status"] == "red":
+            reasons[it.get("pillar", "credit")].append(it["name"])
+    for it in manual.get("checklist", []):
+        if it.get("status") == "miss":
+            reasons[it.get("pillar", "credit")].append(f'{it["co"]}：{it["item"][:18]}…')
+    if flags.get("monetization_miss"):
+        reasons["monetize"].append("變現不達標（手動標記）")
+    if flags.get("capex_surprise") or manual.get("capex_cut_announced"):
+        reasons["capex"].append("capex 意外（手動標記）")
+    n_bad = sum(1 for v in reasons.values() if v)
+    light = "red" if n_bad >= 2 else "amber" if n_bad == 1 else "green"
+    cal = []
+    for ev in manual.get("calendar", []):
+        d = ev.get("date")
+        days = (pd.Timestamp(d) - pd.Timestamp(today.date())).days if d else None
+        if days is None or days >= -1:
+            cal.append(dict(ev, days=days))
+    cal.sort(key=lambda e: (e["days"] is None, e["days"] if e["days"] is not None else 0))
+    return dict(light=light, n_bad=n_bad, reasons=reasons, stage=stage,
+                chain=I.chain_detail(raw), b_layer=b, checklist=manual.get("checklist", []), calendar=cal)
+
+
 def build(raw, ind, st, th, gs, scen, manual, prev):
     cards, stale = [], []
     today = raw.index[-1]
@@ -49,6 +89,16 @@ def build(raw, ind, st, th, gs, scen, manual, prev):
         s = ind[i].dropna()
         if s.empty:
             cards.append(dict(id=i, value=None, status="na", spark=[], spark_d=[], th=th.get(i), asof=None))
+            continue
+        if spec["mode"] == "info":
+            d = s.index[-1]
+            win = ind[i].loc[today - pd.Timedelta(days=380):]
+            prev5 = s.loc[: d - pd.Timedelta(days=7)]
+            cards.append(dict(id=i, value=float(s.iloc[-1]), status="info",
+                              chg_1w=_f(float(s.iloc[-1]) - float(prev5.iloc[-1])) if len(prev5) else None,
+                              pct=float((s < s.iloc[-1]).mean() * 100) if len(s) > 250 else None, th=(None, None),
+                              spark=[_f(v) for v in win.values], spark_d=[t.strftime("%y/%m/%d") for t in win.index],
+                              asof=d.strftime("%m/%d")))
             continue
         d = s.index[-1]
         x = float(s.iloc[-1])
@@ -122,6 +172,7 @@ def main():
     prev = json.loads(prev_p.read_text()) if prev_p.exists() else None
 
     D = build(raw, ind, st, th, gs, scen, manual, prev)
+    D["ai"] = ai_module(raw, D["cards"], manual, now)
     D["bt"] = backtest.run_all(raw, ind, scen)
     D["updated"] = now.strftime("%Y-%m-%d %H:%M")
     D["log"] = fetch.LOG
@@ -132,7 +183,8 @@ def main():
     (DOCS / ".nojekyll").write_text("")
     summary = dict(updated=D["updated"], slot=slot, scenarios=D["scenarios"]["now"], groups=D["groups"],
                    indicators={c["id"]: dict(value=c["value"], status=c["status"], asof=c.get("asof")) for c in D["cards"]},
-                   prices=D["prices"], active_rules=[r["name"] for r in (D["bt"].get("rules") or []) if r.get("active") and not r.get("baseline")],
+                   prices=D["prices"], ai=dict(light=D["ai"]["light"], reasons=D["ai"]["reasons"], stage=D["ai"]["stage"]),
+                   active_rules=[r["name"] for r in (D["bt"].get("rules") or []) if r.get("active") and not r.get("baseline")],
                    analogs=(D["bt"].get("analogs") or {}).get("matches", [])[:5])
     (DOCS / "latest.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
     print(f"[render] docs/index.html 完成；情境 {D['scenarios']['now']}")
@@ -149,7 +201,8 @@ def main():
 
     STATE.mkdir(exist_ok=True)
     prev_p.write_text(json.dumps(dict(updated=D["updated"], scenarios=D["scenarios"]["now"],
-                                      status={c["id"]: c["status"] for c in D["cards"]}), ensure_ascii=False))
+                                      status={c["id"]: c["status"] for c in D["cards"]},
+                                      ai_light=D["ai"]["light"]), ensure_ascii=False))
     hp = STATE / "runs.csv"
     row = pd.DataFrame([{"time": D["updated"], "slot": slot, **D["scenarios"]["now"]}])
     row.to_csv(hp, mode="a", header=not hp.exists(), index=False)

@@ -12,7 +12,7 @@ import requests
 from . import config as C
 
 STATE = Path(__file__).resolve().parent.parent / "state" / "telegram.json"
-ICON = {"green": "🟢", "amber": "🟡", "red": "🔴", "na": "⚪"}
+ICON = {"green": "🟢", "amber": "🟡", "red": "🔴", "na": "⚪", "info": "🔷"}
 
 
 def _api(token, method, **kw):
@@ -98,6 +98,18 @@ def build_message(D: dict, slot: str, url: str | None) -> str:
     L.append(f"加權 {px('TWII')}｜櫃買 {px('TWOII', 2)}｜台積電 {px('TSMC')}")
     L.append(f"融資 {v('tw_margin')}（5日 {v('tw_margin_5d')}）｜維持率(估) {v('tw_maint')}")
     L.append(f"去槓桿進度 {v('tw_delever')}｜外資5日 {v('tw_foreign_5d')}｜跌停 {v('tw_limitdown')}")
+
+    ai = D.get("ai")
+    if ai:
+        L += ["", f"<b>AI 資金鏈 {ICON[ai['light']]}</b>（{ai['n_bad']}/3 支柱轉壞，傳導 {ai['stage'] or 0:.0f}/4 環）"]
+        L.append("　".join(f"{e(l['name'])} {l['r20']:+.0f}%" + ("✗" if l["hit"] else "") for l in ai["chain"] if l["r20"] is not None) + "（20日）")
+        for k, nm in (("credit", "信用"), ("monetize", "變現"), ("capex", "capex")):
+            if ai["reasons"][k]:
+                L.append(f"🔴 {nm}：{e('、'.join(ai['reasons'][k][:4]))}")
+        L.append(f"BBB {v('bbb_oas')}｜背離 {v('credit_eq_div')}｜BDC−HYG {v('bizd_hyg_1m')}｜ANT vs IPO {v('ant_vs_ipo')}")
+        soon = [x for x in ai["calendar"] if x["days"] is not None and 0 <= x["days"] <= 14]
+        if soon:
+            L += ["", "<b>📅 未來兩週</b>"] + [f"{'❗' if x['days'] <= 3 else '•'} {e(x['date'][5:])}（{x['days']}天）{e(x['event'])}" for x in soon]
 
     an = (D.get("bt") or {}).get("analogs") or {}
     if an.get("matches"):

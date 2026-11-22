@@ -104,6 +104,26 @@ def compute(raw: pd.DataFrame) -> pd.DataFrame:
     out["orcl_dd"] = _dd(g("ORCL"))
     out["crwv_dd"] = _dd(g("CRWV"))
 
+    # ---- AI funding chain
+    basket_dd = lambda names: pd.DataFrame({n: _dd(g(n)) for n in names}).mean(axis=1, skipna=True)  # noqa: E731
+    basket_ret = lambda names, n: pd.DataFrame({k: _chg(g(k), n) for k in names}).mean(axis=1, skipna=True)  # noqa: E731
+    out["bbb_oas"] = g("BBB_OAS")
+    hyg20 = _chg(g("HYG"), 20)
+    neo20 = basket_ret(C.NEOCLOUD, 20)
+    div = ((hyg20 < -0.5) & (neo20 > 5)).astype(float).where(hyg20.notna() & neo20.notna())
+    out["credit_eq_div"] = div.rolling(10, min_periods=5).sum()
+    out["bizd_hyg_1m"] = _chg(g("BIZD"), 21) - _chg(g("HYG"), 21)
+    out["owl_dd"] = _dd(g("OWL"))
+    out["ai_chain_stage"] = chain_stage(raw)
+    out["neocloud_dd"] = basket_dd(C.NEOCLOUD)
+    out["upstream_dd"] = basket_dd(C.UPSTREAM)
+    out["hyper_dd"] = basket_dd(C.HYPERSCALERS)
+    out["tw_chain_dd"] = basket_dd(C.TW_CHAIN)
+    out["power_dd"] = basket_dd(C.POWER)
+    out["ant_vs_ipo"] = (g("ANT") / C.ANT_IPO_PRICE - 1) * 100
+    hyper_ew = pd.DataFrame({k: g(k) / g(k).dropna().iloc[0] for k in C.HYPERSCALERS if g(k).notna().any()}).mean(axis=1)
+    out["up_vs_hyper"] = _chg(g("SMH") / hyper_ew, 63)
+
     # ---- Taiwan
     out["twii_dd"] = _dd(g("TWII"))
     out["twoii_dd"] = _dd(g("TWOII"))
@@ -116,6 +136,35 @@ def compute(raw: pd.DataFrame) -> pd.DataFrame:
     out["tw_foreign_5d"] = g("tw_foreign").rolling(5, min_periods=4).sum()
     out["tw_limitdown"] = g("tw_limitdown")
     out["twd_1m"] = _chg(g("USDTWD"), 21)
+    return out
+
+
+def chain_stage(raw: pd.DataFrame, n: int = 20) -> pd.Series:
+    """How many links of the chain, counted in order from the weakest, have
+    cracked (20-day basket return below the link's threshold)."""
+    stage = pd.Series(0.0, index=raw.index)
+    still = pd.Series(True, index=raw.index)
+    any_data = pd.Series(False, index=raw.index)
+    for _, names, th in C.CHAIN_LINKS:
+        r = pd.DataFrame({k: _chg(raw[k], n) for k in names if k in raw}).mean(axis=1, skipna=True)
+        any_data |= r.notna()
+        hit = (r <= th).fillna(False)
+        still &= hit
+        stage += still.astype(float)
+    return stage.where(any_data)
+
+
+def chain_detail(raw: pd.DataFrame) -> list[dict]:
+    out = []
+    for name, names, th in C.CHAIN_LINKS:
+        cols = [k for k in names if k in raw and raw[k].notna().any()]
+        if not cols:
+            out.append(dict(name=name, members=names, r5=None, r20=None, dd=None, th=th, hit=False))
+            continue
+        r5 = float(pd.DataFrame({k: _chg(raw[k], 5) for k in cols}).mean(axis=1).iloc[-1])
+        r20 = float(pd.DataFrame({k: _chg(raw[k], 20) for k in cols}).mean(axis=1).iloc[-1])
+        dd = float(pd.DataFrame({k: _dd(raw[k]) for k in cols}).mean(axis=1).iloc[-1])
+        out.append(dict(name=name, members=names, r5=r5, r20=r20, dd=dd, th=th, hit=bool(r20 <= th)))
     return out
 
 
@@ -175,6 +224,10 @@ def stress_frame(ind: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     th = {}
     for spec in C.IND:
         s = ind[spec["id"]]
+        if spec["mode"] == "info":
+            st[spec["id"]] = np.nan
+            th[spec["id"]] = (np.nan, np.nan)
+            continue
         if spec["mode"] == "abs":
             a, r_ = spec["amber"], spec["red"]
             st[spec["id"]] = [stress_value(spec, x, a, r_) for x in s.values]
@@ -202,6 +255,8 @@ def stress_frame(ind: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
 def group_scores(st: pd.DataFrame) -> pd.DataFrame:
     groups = {}
     for spec in C.IND:
+        if spec["mode"] == "info":
+            continue
         groups.setdefault(spec["grp"], []).append(spec["id"])
     return pd.DataFrame({g: st[ids].mean(axis=1, skipna=True) for g, ids in groups.items()})
 
@@ -210,10 +265,11 @@ def scenario_scores(gs: pd.DataFrame, manual: dict | None = None) -> pd.DataFram
     f = lambda k: gs[k].fillna(0) if k in gs else 0  # noqa: E731
     eq, cr, fu, xa = f("equity"), f("credit"), f("funding"), f("xasset")
     ai, po, gr = f("ai"), f("policy"), f("growth")
+    aicr, aich = f("aicredit"), f("aichain")
     capex_cut = 1.0 if (manual or {}).get("capex_cut_announced") else 0.0
     sc = pd.DataFrame(index=gs.index)
     sc["A"] = eq * (1 - 0.8 * cr) * (1 - 0.8 * fu)
-    sc["B"] = (0.40 * ai + 0.30 * po + 0.30 * gr) * 0.85 + 0.15 * capex_cut + 0.15 * eq * ai
-    sc["C"] = 0.65 * cr + 0.20 * cr * ai + 0.15 * cr * eq
+    sc["B"] = (0.30 * ai + 0.15 * aich + 0.25 * po + 0.30 * gr) * 0.85 + 0.15 * capex_cut + 0.15 * eq * ai
+    sc["C"] = 0.45 * cr + 0.25 * aicr + 0.15 * aich * cr + 0.15 * cr * eq
     sc["D"] = 0.50 * fu + 0.35 * xa + 0.15 * fu * xa
     return (sc.clip(0, 1) * 100).round(1)
