@@ -106,6 +106,8 @@ def build(raw, ind, st, th, gs, scen, manual, prev):
         x = float(s.iloc[-1])
         stv = st[i].loc[:d].dropna()
         status = I.status_of(float(stv.iloc[-1])) if len(stv) else "na"
+        if status == "na" and spec["mode"] == "pct":
+            status = "hist"
         age = (today - d).days
         if age > (14 if i in WEEKLY else 7):
             stale.append(spec["name"])
@@ -120,7 +122,7 @@ def build(raw, ind, st, th, gs, scen, manual, prev):
     prev_st = (prev or {}).get("status", {})
     transitions = [dict(id=c["id"], frm=prev_st[c["id"]], to=c["status"], value=c["value"])
                    for c in cards if c["id"] in prev_st and prev_st[c["id"]] != c["status"]
-                   and c["status"] != "na" and prev_st[c["id"]] != "na"]
+                   and c["status"] not in ("na", "hist") and prev_st[c["id"]] not in ("na", "hist")]
     for t in transitions:
         t["from"] = t.pop("frm")
     order = {"red": 0, "amber": 1, "green": 2}

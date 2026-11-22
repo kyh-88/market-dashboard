@@ -12,7 +12,7 @@ import requests
 from . import config as C
 
 STATE = Path(__file__).resolve().parent.parent / "state" / "telegram.json"
-ICON = {"green": "🟢", "amber": "🟡", "red": "🔴", "na": "⚪", "info": "🔷"}
+ICON = {"green": "🟢", "amber": "🟡", "red": "🔴", "na": "⚪", "info": "🔷", "hist": "⚪"}
 
 
 def _api(token, method, **kw):
@@ -69,7 +69,9 @@ def build_message(D: dict, slot: str, url: str | None) -> str:
     title = "🌅 Morning brief" if slot == "morning" else "🌆 Evening brief"
     sc = D["scenarios"]
     top = max(sc["now"], key=sc["now"].get)
-    L = [f"<b>{title}</b>  {e(D['updated'])}", ""]
+    from .render import verdict
+    h1, sub = verdict(D)
+    L = [f"<b>{title}</b>  {e(D['updated'])}", "", f"<b>{e(h1)}</b>", e(sub), ""]
     L.append("<b>Scenario scores</b> (0–100)")
     for k, meta in C.SCENARIOS.items():
         d = sc["delta_prev"].get(k)

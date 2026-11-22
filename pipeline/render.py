@@ -1,4 +1,4 @@
-"""Static, mobile-first HTML dashboard (no external dependencies)."""
+"""Static dashboard page. Desktop-first layout that collapses cleanly on phones."""
 from __future__ import annotations
 
 import html
@@ -7,60 +7,194 @@ import math
 
 from . import config as C
 
-ST_LABEL = {"green": ("●", "Normal"), "amber": ("▲", "Watch"), "red": ("■", "Danger"), "na": ("○", "No data"), "info": ("◆", "Info")}
+ST = {"green": ("Normal", "g"), "amber": ("Watch", "a"), "red": ("Danger", "r"), "na": ("No data", "n"), "info": ("Info", "i"), "hist": ("Building history", "n")}
 
-CSS = """
-:root{--bg:#fcfcfb;--card:#ffffff;--ink:#0b0b0b;--ink2:#52514e;--ink3:#8a8984;--line:#e6e5e0;
---series:#2a78d6;--good:#0ca30c;--warn:#fab219;--crit:#d03b3b;--chip:#f3f2ee}
-@media (prefers-color-scheme:dark){:root{--bg:#1a1a19;--card:#232322;--ink:#f0efec;--ink2:#c3c2b7;--ink3:#8f8e86;
---line:#383835;--series:#3987e5;--chip:#2d2d2b}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
-header{padding:16px 16px 8px}h1{font-size:19px;margin:0}.sub{color:var(--ink2);font-size:12px}
-nav{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:6px;padding:8px 12px;overflow-x:auto;border-bottom:1px solid var(--line)}
-nav a{white-space:nowrap;text-decoration:none;color:var(--ink2);padding:6px 12px;border-radius:999px;background:var(--chip);font-size:13px}
-nav a.on{background:var(--ink);color:var(--bg)}
-section{display:none;padding:12px}section.on{display:block}
-h2{font-size:16px;margin:18px 4px 8px}h3{font-size:14px;margin:14px 4px 6px;color:var(--ink2)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.ind .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.ind .nm{font-size:13px;color:var(--ink2)}.ind .val{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
-.ind .meta{font-size:11px;color:var(--ink3);margin-top:2px}.ind .note{font-size:11px;color:var(--ink3);margin-top:4px}
-.chip{font-size:11px;padding:2px 7px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);color:var(--ink2)}
-.chip .ic{margin-right:3px}.s-green .ic{color:var(--good)}.s-amber .ic{color:var(--warn)}.s-red .ic{color:var(--crit)}
-.card.s-red{border-left:4px solid var(--crit)}.card.s-amber{border-left:4px solid var(--warn)}
-svg.sp{display:block;width:100%;height:36px;margin-top:6px;touch-action:none}
-.scen{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
-.scen .card.top1{outline:2px solid var(--ink)}.scen .sc{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
-.scen .nm{font-weight:600}.scen .an{font-size:11px;color:var(--ink3)}.scen .ds{font-size:12px;color:var(--ink2);margin-top:4px}
-.bar{height:8px;border-radius:4px;background:var(--chip);overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;border-radius:4px}
-.heat{display:grid;grid-template-columns:110px 1fr 36px;gap:6px 8px;align-items:center;font-size:13px}
-.heat .n{color:var(--ink2)}.heat .v{text-align:right;font-variant-numeric:tabular-nums}
-.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
-th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--card);white-space:normal;min-width:150px;max-width:190px}th{color:var(--ink2);font-weight:500}
-tr.cur td{font-weight:700}.neg{color:var(--crit)}.pos{color:var(--good)}
-ul.alerts{margin:0;padding-left:18px}ul.alerts li{margin:3px 0}
-.muted{color:var(--ink3);font-size:12px}.legend{font-size:12px;color:var(--ink2);margin:4px}
-#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:11px;padding:3px 6px;border-radius:4px;display:none;z-index:9}
-.active{color:var(--crit);font-weight:600}
-.chain{display:flex;gap:4px;align-items:stretch;overflow-x:auto}.chain .lk{flex:1;min-width:64px;border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center;font-size:12px}
-.chain .lk.hit{border-color:var(--crit);border-width:2px}.chain .ar{align-self:center;color:var(--ink3)}
-.chain .lk b{display:block;font-size:12px;hyphens:manual}.big{font-size:22px;font-weight:700}
-.pill{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:13px;margin-top:8px}
+CSS = r"""
+@font-face{font-family:"Archivo";src:url(fonts/archivo-wdth.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+:root{
+  --paper:#e9eef3; --surface:#ffffff; --sunk:#f3f6f9; --ink:#14202e; --ink2:#4a5868; --ink3:#7d8a99;
+  --rule:#d3dae2; --blue:#1f5fbf; --blue-soft:#dbe6f6;
+  --g:#1e8a4c; --a:#c98a00; --r:#c2362b; --n:#9aa6b3; --i:#1f5fbf;
+  --g-soft:#e2f2e8; --a-soft:#fbf0d6; --r-soft:#f8e1df;
+  --radius-l:14px; --radius-s:6px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#0e141c; --surface:#151e29; --sunk:#1b2633; --ink:#e6ecf2; --ink2:#a9b6c4; --ink3:#748294;
+  --rule:#263343; --blue:#6fa2f0; --blue-soft:#1d2d44;
+  --g:#3fb873; --a:#e0a92a; --r:#e5635a; --n:#5d6b7b; --i:#6fa2f0;
+  --g-soft:#173123; --a-soft:#3a2f12; --r-soft:#3d1d1b;
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 "Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;font-variation-settings:"wdth" 100;font-feature-settings:"tnum" 1}
+a{color:var(--blue)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+.num{font-variant-numeric:tabular-nums}
+.cond{font-stretch:75%;font-variation-settings:"wdth" 75}
+
+/* top bar */
+.top{background:var(--ink);color:var(--paper)}
+.top .wrap{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:17px;letter-spacing:.01em}
+.stamps{display:flex;gap:18px;font-size:12.5px;color:#b8c3cf;flex-wrap:wrap}
+.stamps b{color:#fff;font-weight:600}
+@media (prefers-color-scheme:dark){.top{background:#05090e}}
+
+/* tabs */
+nav{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:1px solid var(--rule)}
+nav .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav a{flex:none;padding:13px 14px 11px;color:var(--ink2);text-decoration:none;font-weight:600;font-size:14px;border-bottom:3px solid transparent}
+nav a:hover{color:var(--ink)}
+nav a.on{color:var(--ink);border-bottom-color:var(--blue)}
+nav a:focus-visible,svg.sp:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+section.tab{display:none;padding:28px 0 64px}section.tab .wrap>h2:first-child{margin-top:0}section.tab.on{display:block}
+
+/* verdict */
+.verdict{margin:4px 0 26px;max-width:860px}
+.verdict h1{font-size:clamp(28px,4.2vw,44px);line-height:1.08;margin:0 0 10px;font-weight:800;font-stretch:80%;font-variation-settings:"wdth" 80;letter-spacing:-.01em}
+.verdict p{margin:0;color:var(--ink2);font-size:16.5px;max-width:70ch}
+
+h2{font-size:19px;font-weight:700;margin:36px 0 12px;letter-spacing:-.005em}
+h2 small{font-weight:500;color:var(--ink3);font-size:13.5px;margin-left:8px}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px}
+.muted{color:var(--ink3);font-size:13px}
+.panel{background:var(--surface);border-radius:var(--radius-l);padding:18px 20px;box-shadow:0 0 0 1px var(--rule)}
+
+/* scenarios */
+.scen{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:var(--surface);border-radius:var(--radius-l);box-shadow:0 0 0 1px var(--rule);overflow:hidden}
+.sc{padding:18px 20px 16px;border-left:1px solid var(--rule);display:flex;flex-direction:column;gap:6px;min-width:0}
+.sc:first-child{border-left:0}
+.sc.top{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sc.top .an,.sc.top .ds,.sc.top .dl{color:#b8c3cf}
+.sc .hd{display:flex;gap:8px;align-items:baseline}
+.sc .lt{font-weight:800;font-size:13px;width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;background:var(--sunk);color:var(--ink2);flex:none}
+.sc.top .lt{background:var(--blue);color:#fff}
+.sc .nm{font-weight:700;font-size:15px;line-height:1.25}
+.sc .an{font-size:12.5px;color:var(--ink3)}
+.sc .big{font-size:58px;line-height:1;font-weight:800;font-stretch:70%;font-variation-settings:"wdth" 70;margin-top:4px}
+.sc .dl{font-size:12.5px;color:var(--ink3)}
+.sc .ds{font-size:13px;color:var(--ink2);margin-top:auto}
+.meter{height:6px;border-radius:3px;background:var(--sunk);position:relative;overflow:hidden}
+.sc.top .meter{background:#2a3848}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.meter.ticks::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent calc(35% - 1px),var(--surface) calc(35% - 1px),var(--surface) 35%,transparent 35%,transparent calc(60% - 1px),var(--surface) calc(60% - 1px),var(--surface) 60%,transparent 60%)}
+.sc.top .meter.ticks::after{background:linear-gradient(90deg,transparent calc(35% - 1px),var(--ink) calc(35% - 1px),var(--ink) 35%,transparent 35%,transparent calc(60% - 1px),var(--ink) calc(60% - 1px),var(--ink) 60%,transparent 60%)}
+
+/* two column overview */
+.cols{display:grid;grid-template-columns:5fr 7fr;gap:20px;margin-top:20px}
+.layers{display:grid;grid-template-columns:minmax(120px,auto) 1fr 34px;gap:9px 12px;align-items:center;font-size:14px}
+.layers .v{text-align:right;font-weight:700}
+.alert-list{list-style:none;margin:0;padding:0}
+.alert-list li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--rule);font-size:14px}
+.alert-list li:first-child{border-top:0}
+.alert-list .val{font-weight:700;white-space:nowrap}
+
+/* status */
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.st::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--c,var(--n))}
+.st.g{--c:var(--g)}.st.a{--c:var(--a)}.st.r{--c:var(--r)}.st.n{--c:var(--n)}.st.i{--c:var(--i);}
+.st.i::before{border-radius:50%}
+
+/* AI strip */
+.chain{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:4px}
+.lk{padding:12px 14px;border-left:1px solid var(--rule);position:relative}
+.lk:first-child{border-left:0}
+.lk .ln{font-weight:700;font-size:14px}
+.lk .lr{font-size:26px;font-weight:800;font-stretch:75%;font-variation-settings:"wdth" 75;line-height:1.15}
+.lk.hit .lr{color:var(--r)}
+.lk .lm{font-size:12.5px;color:var(--ink3)}
+.lk:not(:last-child)::after{content:"";position:absolute;right:-7px;top:50%;width:12px;height:12px;background:var(--surface);border-top:1px solid var(--rule);border-right:1px solid var(--rule);transform:translateY(-50%) rotate(45deg);z-index:1}
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+.pill{border-radius:var(--radius-s);padding:12px 14px;background:var(--sunk)}
+.pill.bad{background:var(--r-soft)}
+.pill b{display:block;font-size:14px;margin-bottom:2px}
+.pill span{font-size:13px;color:var(--ink2)}
+.lightbadge{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:20px}
+.lightbadge::before{content:"";width:16px;height:16px;border-radius:50%;background:var(--c)}
+
+/* indicator rows */
+.grp{background:var(--surface);border-radius:var(--radius-l);box-shadow:0 0 0 1px var(--rule);overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(220px,1.3fr) 150px minmax(160px,1fr) 92px;gap:16px;align-items:center;padding:12px 20px;border-top:1px solid var(--rule)}
+.row:first-child{border-top:0}
+.row.r{box-shadow:inset 3px 0 0 var(--r)}.row.a{box-shadow:inset 3px 0 0 var(--a)}
+.row .nm{font-weight:600;font-size:14.5px;line-height:1.3}
+.row .nt{font-size:12.5px;color:var(--ink3);margin-top:2px;line-height:1.35}
+.row .vl{text-align:right}
+.row .vl b{font-size:22px;font-weight:800;font-stretch:80%;font-variation-settings:"wdth" 80}
+.row .vl u{text-decoration:none;font-size:12.5px;color:var(--ink3);margin-left:3px}
+.row .vl div{font-size:12px;color:var(--ink3);white-space:nowrap}
+.row .stc{text-align:right}
+svg.sp{display:block;width:100%;height:34px;touch-action:none;overflow:visible}
+
+/* tables */
+.tbl{overflow-x:auto;background:var(--surface);border-radius:var(--radius-l);box-shadow:0 0 0 1px var(--rule)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:9px 12px;border-top:1px solid var(--rule);text-align:right;white-space:nowrap}
+tr:first-child th{border-top:0}
+th{color:var(--ink3);font-weight:600;font-size:12.5px;background:var(--sunk)}
+th:first-child,td:first-child{text-align:left;white-space:normal;min-width:200px}
+tr.cur td{background:var(--blue-soft);font-weight:700}
+.neg{color:var(--r)}.pos{color:var(--g)}
+.tag-active{display:inline-block;margin-left:6px;font-size:12px;font-weight:700;color:var(--r)}
+.note{margin:10px 2px 0;color:var(--ink3);font-size:13px;max-width:90ch}
+details summary{cursor:pointer;color:var(--ink2);font-size:13px;margin-top:10px}
+
+/* guide */
+.guide{max-width:780px}
+.guide p,.guide li{font-size:15.5px;line-height:1.6;color:var(--ink)}
+.guide .lead{font-size:18px;color:var(--ink2)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{counter-increment:s;position:relative;padding:0 0 14px 44px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-weight:800;font-size:14px}
+.gl{display:grid;grid-template-columns:minmax(200px,1fr) 2fr;gap:0;background:var(--surface);border-radius:var(--radius-l);box-shadow:0 0 0 1px var(--rule);overflow:hidden;margin-bottom:8px}
+.gl > div{padding:10px 16px;border-top:1px solid var(--rule);font-size:14px}
+.gl > div:nth-child(-n+2){border-top:0}
+.gl .k{font-weight:600}
+.legend-row{display:flex;gap:18px;flex-wrap:wrap;margin:8px 0}
+
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--paper);font-size:12px;padding:4px 8px;border-radius:4px;display:none;z-index:20;white-space:nowrap}
+
+@media (max-width:900px){
+  .wrap{padding:0 16px}
+  .scen{grid-template-columns:repeat(2,1fr)}
+  .sc:nth-child(3){border-left:0}.sc:nth-child(n+3){border-top:1px solid var(--rule)}
+  .cols{grid-template-columns:1fr}
+  .pillars{grid-template-columns:1fr}
+  .row{grid-template-columns:1fr auto;gap:6px 12px;padding:12px 16px}
+  .row .spc{grid-column:1/-1;order:3}
+  .row .stc{order:2;text-align:left}
+  .row .vl{order:1;grid-row:1;grid-column:2}
+  .row .info{grid-column:1;grid-row:1}
+  .sc .big{font-size:46px}
+  .row .stc .muted{display:inline;margin-left:8px}
+}
+@media (max-width:560px){
+  .chain{grid-template-columns:repeat(2,1fr)}
+  .lk:nth-child(3){border-left:0}.lk:nth-child(n+3){border-top:1px solid var(--rule)}
+  .lk:nth-child(2)::after{display:none}
+  .gl{grid-template-columns:1fr}.gl > div:nth-child(2){border-top:1px solid var(--rule)}
+  .gl .k{border-top:1px solid var(--rule)}.gl .d{border-top:0;padding-top:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 """
 
-JS = """
-document.querySelectorAll('nav a').forEach(a=>a.onclick=e=>{e.preventDefault();
-document.querySelectorAll('nav a,section').forEach(x=>x.classList.remove('on'));a.classList.add('on');
-document.getElementById(a.dataset.t).classList.add('on');window.scrollTo(0,0);try{history.replaceState(null,'','#'+a.dataset.t)}catch(_){}} );
-const h=location.hash.slice(1);if(h){const a=document.querySelector('nav a[data-t="'+h+'"]');if(a)a.click();}
+JS = r"""
+const tabs=[...document.querySelectorAll('nav a')];
+function show(t){tabs.forEach(a=>a.classList.toggle('on',a.dataset.t===t));
+document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on',s.id===t));}
+tabs.forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.t);window.scrollTo(0,0);
+try{history.replaceState(null,'','#'+a.dataset.t)}catch(_){}}));
+const h=location.hash.slice(1);if(h&&document.getElementById(h))show(h);
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.go);window.scrollTo(0,0)}));
 const tip=document.getElementById('tip');
-function mv(e){const s=e.currentTarget,r=s.getBoundingClientRect();const p=e.touches?e.touches[0]:e;
-const v=s.dataset.v.split(','),d=s.dataset.d.split(','),n=v.length;let i=Math.round((p.clientX-r.left)/r.width*(n-1));i=Math.max(0,Math.min(n-1,i));
-tip.textContent=d[i]+'  '+v[i];tip.style.display='block';tip.style.left=Math.min(p.clientX+8,innerWidth-120)+'px';tip.style.top=(p.clientY-28)+'px';}
+function mv(e){const s=e.currentTarget,r=s.getBoundingClientRect(),p=e.touches?e.touches[0]:e;
+const v=s.dataset.v.split(','),d=s.dataset.d.split(','),n=v.length;
+let i=Math.round((p.clientX-r.left)/r.width*(n-1));i=Math.max(0,Math.min(n-1,i));
+if(v[i]===''){tip.style.display='none';return}
+tip.textContent=d[i]+'   '+v[i];tip.style.display='block';
+tip.style.left=Math.min(p.clientX+10,innerWidth-130)+'px';tip.style.top=(p.clientY-30)+'px';}
 document.querySelectorAll('svg.sp').forEach(s=>{s.addEventListener('mousemove',mv);s.addEventListener('touchmove',mv,{passive:true});
-s.addEventListener('mouseleave',()=>tip.style.display='none');s.addEventListener('touchend',()=>tip.style.display='none');});
+['mouseleave','touchend'].forEach(ev=>s.addEventListener(ev,()=>tip.style.display='none'));});
 """
 
 
@@ -68,132 +202,208 @@ def esc(x) -> str:
     return html.escape(str(x))
 
 
+def isnan(v) -> bool:
+    return v is None or (isinstance(v, float) and math.isnan(v))
+
+
 def fmt(spec, v):
-    if v is None or (isinstance(v, float) and math.isnan(v)):
-        return "—"
+    if isnan(v):
+        return "–"
     try:
         return spec["fmt"].format(v)
     except Exception:  # noqa: BLE001
         return f"{v:.2f}"
 
 
-def sparkline(vals, dates, th=None, w=300, h=36):
-    pts = [(i, v) for i, v in enumerate(vals) if v is not None and not math.isnan(v)]
+def status(s):
+    lb, c = ST.get(s, ST["na"])
+    return f'<span class="st {c}">{lb}</span>'
+
+
+def sparkline(vals, dates, th=None, w=300, h=34):
+    pts = [(i, v) for i, v in enumerate(vals) if not isnan(v)]
     if len(pts) < 2:
-        return '<div class="muted">History still accumulating</div>'
+        return '<div class="muted">History still building</div>'
     ys = [v for _, v in pts]
     lo, hi = min(ys), max(ys)
-    if th:
-        for t in th:
-            if t is not None and not math.isnan(t) and lo - (hi - lo) * 0.5 <= t <= hi + (hi - lo) * 0.5:
-                lo, hi = min(lo, t), max(hi, t)
+    span = (hi - lo) or 1
+    for t in th or ():
+        if not isnan(t) and lo - span * 0.6 <= t <= hi + span * 0.6:
+            lo, hi = min(lo, t), max(hi, t)
     if hi == lo:
         hi = lo + 1
     n = len(vals)
-    X = lambda i: 2 + (w - 4) * i / max(1, n - 1)  # noqa: E731
+    X = lambda i: 1 + (w - 6) * i / max(1, n - 1)  # noqa: E731
     Y = lambda v: 3 + (h - 6) * (1 - (v - lo) / (hi - lo))  # noqa: E731
     d = "M" + " L".join(f"{X(i):.1f},{Y(v):.1f}" for i, v in pts)
     lines = ""
-    if th:
-        for t, col in zip(th, ("var(--warn)", "var(--crit)")):
-            if t is not None and not math.isnan(t) and lo <= t <= hi:
-                lines += f'<line x1="0" x2="{w}" y1="{Y(t):.1f}" y2="{Y(t):.1f}" stroke="{col}" stroke-width="1" stroke-dasharray="3 3"/>'
+    for t, col in zip(th or (), ("var(--a)", "var(--r)")):
+        if not isnan(t) and lo <= t <= hi:
+            lines += f'<line x1="0" x2="{w}" y1="{Y(t):.1f}" y2="{Y(t):.1f}" stroke="{col}" stroke-width="1" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/>'
     li, lv = pts[-1]
-    vs = ",".join("" if v is None or math.isnan(v) else f"{v:.4g}" for v in vals)
-    return (f'<svg class="sp" viewBox="0 0 {w} {h}" preserveAspectRatio="none" data-v="{vs}" data-d="{",".join(dates)}">'
-            f'{lines}<path d="{d}" fill="none" stroke="var(--series)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
-            f'<circle cx="{X(li):.1f}" cy="{Y(lv):.1f}" r="3" fill="var(--series)"/></svg>')
-
-
-def chip(status):
-    ic, lb = ST_LABEL[status]
-    return f'<span class="chip s-{status}"><span class="ic">{ic}</span>{lb}</span>'
-
-
-def ind_card(c):
-    spec = C.IND_BY_ID[c["id"]]
-    chg = c.get("chg_1w")
-    chg_s = "" if chg is None else f"1w chg {'+' if chg >= 0 else '−'}{fmt(spec, abs(chg)).lstrip('+')}"
-    pct = "" if c.get("pct") is None else f"{c['pct']:.0f}th pctile"
-    th = c.get("th") or (None, None)
-    ths = "" if th[0] is None or (isinstance(th[0], float) and math.isnan(th[0])) else \
-        f"Watch {fmt(spec, th[0])} / Danger {fmt(spec, th[1])}"
-    meta = " · ".join(x for x in (chg_s, pct, f"as of {c['asof']}" if c.get("asof") else "") if x)
-    return (f'<div class="card ind s-{c["status"]}"><div class="top"><div><div class="nm">{esc(spec["name"])}</div>'
-            f'<div class="val">{fmt(spec, c["value"])}<span class="muted"> {esc(spec["unit"])}</span></div></div>{chip(c["status"])}</div>'
-            f'{sparkline(c["spark"], c["spark_d"], th)}<div class="meta">{esc(meta)}</div>'
-            f'<div class="note">{esc(ths)}{" · " if ths and spec["note"] else ""}{esc(spec["note"])}</div></div>')
+    vs = ",".join("" if isnan(v) else f"{v:.4g}" for v in vals)
+    return (f'<svg class="sp" tabindex="0" role="img" aria-label="1-year history" viewBox="0 0 {w} {h}" preserveAspectRatio="none" '
+            f'data-v="{vs}" data-d="{",".join(dates)}">{lines}'
+            f'<path d="{d}" fill="none" stroke="var(--blue)" stroke-width="1.75" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>'
+            f'<circle cx="{X(li):.1f}" cy="{Y(lv):.1f}" r="2.5" fill="var(--blue)"/></svg>')
 
 
 def pct_cell(v, digits=1):
-    if v is None or (isinstance(v, float) and math.isnan(v)):
-        return "<td>—</td>"
-    cls = "neg" if v < 0 else "pos"
-    return f'<td class="{cls}">{v:+.{digits}f}</td>'
+    if isnan(v):
+        return "<td>–</td>"
+    return f'<td class="{"neg" if v < 0 else "pos"}">{v:+.{digits}f}%</td>'
 
 
 def num_cell(v, f="{:.1f}"):
-    if v is None or (isinstance(v, float) and math.isnan(v)):
-        return "<td>—</td>"
-    return f"<td>{f.format(v)}</td>"
+    return "<td>–</td>" if isnan(v) else f"<td>{f.format(v)}</td>"
 
 
-def render(D: dict) -> str:
-    cards = {c["id"]: c for c in D["cards"]}
+def stress_color(v):
+    return "var(--r)" if v >= 60 else "var(--a)" if v >= 35 else "var(--g)"
+
+
+# ---------------------------------------------------------------- verdict
+HEAD = {
+    "A": "Equities are panicking, but nothing has broken underneath",
+    "B": "Markets are pricing an earnings-downgrade bear",
+    "C": "Stress is moving from stocks into credit",
+    "D": "Funding markets are under strain",
+}
+
+
+def verdict(D) -> tuple[str, str]:
+    sc = D["scenarios"]["now"]
+    g = D["groups"]
+    top = max(sc, key=sc.get)
+    if sc[top] < 35:
+        h1 = "Stress is low across the board"
+    else:
+        h1 = HEAD[top]
+    cr, fu = g.get("credit") or 0, g.get("funding") or 0
+    if cr < 45 and fu < 45:
+        sub = "Credit and funding markets have not confirmed it."
+    elif cr >= 45 and fu >= 45:
+        sub = "Both credit and funding markets are confirming the stress."
+    else:
+        sub = ("Credit" if cr >= 45 else "Funding") + " markets are starting to confirm it."
+    ai = D.get("ai")
+    if ai:
+        sub += f" AI funding chain is {({'green': 'green', 'amber': 'amber', 'red': 'red'})[ai['light']]}, with contagion at link {ai['stage'] or 0:.0f} of 4."
+    return h1 + ".", sub
+
+
+# ---------------------------------------------------------------- building blocks
+def ind_row(c):
+    spec = C.IND_BY_ID[c["id"]]
+    th = c.get("th") or (None, None)
+    chg = c.get("chg_1w")
+    chg_s = "" if chg is None else f"{'+' if chg >= 0 else '−'}{fmt(spec, abs(chg)).lstrip('+')} 1w"
+    pct = "" if c.get("pct") is None else f"{c['pct']:.0f}th pctile"
+    chg_s = chg_s.replace(" 1w", " this week")
+    sub = "".join(f"<div>{esc(x)}</div>" for x in (chg_s, pct) if x)
+    ths = "" if isnan(th[0]) else f"Watch {fmt(spec, th[0])}, danger {fmt(spec, th[1])}. "
+    cls = {"red": "r", "amber": "a"}.get(c["status"], "")
+    return (f'<div class="row {cls}"><div class="info"><div class="nm">{esc(spec["name"])}</div>'
+            f'<div class="nt">{esc(ths)}{esc(spec["note"])}</div></div>'
+            f'<div class="vl"><b>{fmt(spec, c["value"])}</b><u>{esc(spec["unit"])}</u>{sub}</div>'
+            f'<div class="spc">{sparkline(c["spark"], c["spark_d"], th)}</div>'
+            f'<div class="stc">{status(c["status"])}<div class="muted">{esc(c.get("asof") or "")}</div></div></div>')
+
+
+def scen_strip(D):
     sc = D["scenarios"]
     top = max(sc["now"], key=sc["now"].get)
-    # ---------------- overview
-    ov = ['<h2>Scenarios</h2><div class="scen">']
+    out = ['<div class="scen">']
     for k, meta in C.SCENARIOS.items():
         v = sc["now"][k]
-        d_prev = sc["delta_prev"].get(k)
         d5 = sc["delta_5d"].get(k)
-        col = "var(--crit)" if v >= 60 else "var(--warn)" if v >= 35 else "var(--good)"
-        dtxt = " · ".join(x for x in (f"vs last {d_prev:+.0f}" if d_prev is not None else "",
-                                       f"5d {d5:+.0f}" if d5 is not None else "") if x)
-        ov.append(f'<div class="card{" top1" if k == top else ""}"><div class="nm">{k}. {esc(meta["name"])}</div>'
-                  f'<div class="an">Analog: {esc(meta["analog"])}</div><div class="sc">{v:.0f}</div>'
-                  f'<div class="bar"><i style="width:{v}%;background:{col}"></i></div>'
-                  f'{sparkline(sc["hist"][k], sc["hist_d"], None)}<div class="muted">{esc(dtxt)}</div>'
-                  f'<div class="ds">{esc(meta["desc"])}</div></div>')
-    ov.append('</div><p class="legend">Scores run 0–100 and are weighted from layer stress (formulas under Method on the Backtest tab). They measure relative stress, not probability.</p>')
-    if D.get("ai"):
-        ai0 = D["ai"]
-        lb0 = {"green": "Green", "amber": "Amber", "red": "Red"}[ai0["light"]]
-        ov.append(f'<div class="card s-{ai0["light"]}" style="margin-top:8px"><b>AI funding chain: {chip(ai0["light"]).replace(ST_LABEL[ai0["light"]][1], lb0)}</b> '
-                  f'{ai0["n_bad"]}/3 pillars failing · contagion at link {ai0["stage"] or 0:.0f}/4 <span class="muted">(see AI funding chain tab)</span></div>')
-    ov.append('<h2>Stress by layer</h2><div class="card heat">')
+        dprev = sc["delta_prev"].get(k)
+        dl = []
+        if dprev is not None:
+            dl.append(f"{dprev:+.0f} since last update")
+        if d5 is not None:
+            dl.append(f"{d5:+.0f} over 5 days")
+        out.append(f'<div class="sc{" top" if k == top else ""}"><div class="hd"><span class="lt">{k}</span><span class="nm">{esc(meta["name"])}</span></div>'
+                   f'<div class="an">Like {esc(meta["analog"])}</div><div class="big num">{v:.0f}</div>'
+                   f'<div class="meter ticks"><i style="width:{v}%;background:{stress_color(v)}"></i></div>'
+                   f'<div class="dl">{esc("; ".join(dl))}</div><div class="ds">{esc(meta["desc"])}</div></div>')
+    out.append("</div>")
+    return "".join(out)
+
+
+def ai_block(ai, full=False):
+    lc = {"green": "var(--g)", "amber": "var(--a)", "red": "var(--r)"}[ai["light"]]
+    P = [f'<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'
+         f'<span class="lightbadge" style="--c:{lc}">{ai["light"].capitalize()}</span>'
+         f'<span class="muted">{ai["n_bad"]} of 3 pillars failing; contagion at link {ai["stage"] or 0:.0f} of 4</span></div>']
+    P.append('<div class="chain">')
+    for l in ai["chain"]:
+        r20 = "–" if l["r20"] is None else f'{l["r20"]:+.1f}%'
+        r5 = "–" if l["r5"] is None else f'{l["r5"]:+.1f}%'
+        dd = "–" if l["dd"] is None else f'{l["dd"]:.0f}%'
+        P.append(f'<div class="lk{" hit" if l["hit"] else ""}"><div class="ln">{esc(l["name"])}</div><div class="lr num">{r20}</div>'
+                 f'<div class="lm">20 days; cracks at {l["th"]:.0f}%</div><div class="lm">5 days {r5}; from high {dd}</div></div>')
+    P.append("</div>")
+    if full:
+        P.append('<div class="pillars">')
+        for k, nm in (("credit", "Credit alarm"), ("monetize", "Monetization at the source"), ("capex", "Capex surprise")):
+            r = ai["reasons"][k]
+            P.append(f'<div class="pill{" bad" if r else ""}"><b>{nm}</b><span>{esc("; ".join(r)) if r else "Not triggered"}</span></div>')
+        P.append("</div>")
+    P.append("</div>")
+    return "".join(P)
+
+
+# ---------------------------------------------------------------- page
+def render(D: dict) -> str:
+    cards = {c["id"]: c for c in D["cards"]}
+    h1, sub = verdict(D)
+    bt = D.get("bt") or {}
+    an = bt.get("analogs") or {}
+
+    # ---- overview
+    ov = [f'<div class="verdict"><h1>{esc(h1)}</h1><p>{esc(sub)}</p></div>', scen_strip(D),
+          '<p class="note">Scores run from 0 to 100 and measure how much stress matches each pattern. They are not probabilities. '
+          '<a href="#guide" data-go="guide">How to read this</a></p>']
+    lay = ['<div class="panel"><h3 style="margin-top:0">Stress by layer</h3><div class="layers">']
     for gk, gv in D["groups"].items():
         if gv is None:
             continue
-        col = "var(--crit)" if gv >= 70 else "var(--warn)" if gv >= 45 else "var(--good)"
-        ov.append(f'<div class="n">{esc(C.GROUP_NAMES[gk])}</div><div class="bar" style="margin:0"><i style="width:{gv}%;background:{col}"></i></div><div class="v">{gv:.0f}</div>')
-    ov.append("</div>")
-    ov.append('<h2>Changes and alerts</h2><div class="card">')
+        lay.append(f'<div>{esc(C.GROUP_NAMES[gk])}</div><div class="meter"><i style="width:{gv}%;background:{stress_color(gv)}"></i></div><div class="v num">{gv:.0f}</div>')
+    lay.append("</div></div>")
+    al = ['<div class="panel">']
     if D["transitions"]:
-        ov.append('<h3 style="margin-top:0">Changed since last update</h3><ul class="alerts">' + "".join(
-            f'<li>{chip(t["to"])} {esc(C.IND_BY_ID[t["id"]]["name"])}: {fmt(C.IND_BY_ID[t["id"]], t["value"])} (was {ST_LABEL[t["from"]][1]})</li>'
-            for t in D["transitions"]) + "</ul>")
-    reds = [c for c in D["cards"] if c["status"] == "red"]
-    ov.append('<h3>Currently in danger</h3>' + ('<ul class="alerts">' + "".join(
-        f'<li>{esc(C.IND_BY_ID[c["id"]]["name"])}: <b>{fmt(C.IND_BY_ID[c["id"]], c["value"])}</b> {esc(C.IND_BY_ID[c["id"]]["unit"])}</li>' for c in reds)
-        + "</ul>" if reds else '<div class="muted">None</div>'))
-    ov.append("</div>")
-    an = (D.get("bt") or {}).get("analogs") or {}
+        al.append('<h3 style="margin-top:0">Changed since the last update</h3><ul class="alert-list">')
+        for t in D["transitions"][:12]:
+            spec = C.IND_BY_ID[t["id"]]
+            al.append(f'<li>{status(t["to"])}<span>{esc(spec["name"])} <span class="muted">was {ST[t["from"]][0].lower()}</span></span><span class="val num">{fmt(spec, t["value"])}{esc(spec["unit"])}</span></li>')
+        al.append("</ul>")
+    order = ["funding", "credit", "aicredit", "xasset", "policy", "growth", "equity", "internals", "ai", "aichain", "asia", "tw"]
+    reds = sorted([c for c in D["cards"] if c["status"] == "red"], key=lambda c: order.index(C.IND_BY_ID[c["id"]]["grp"]) if C.IND_BY_ID[c["id"]]["grp"] in order else 99)
+    al.append(f'<h3 style="{"margin-top:0" if not D["transitions"] else ""}">In danger now <small class="muted">{len(reds)} indicators, slow-moving layers first</small></h3>')
+    if reds:
+        al.append('<ul class="alert-list">' + "".join(
+            f'<li><span class="st r" aria-label="Danger"></span><span>{esc(C.IND_BY_ID[c["id"]]["name"])} <span class="muted">{esc(C.GROUP_NAMES[C.IND_BY_ID[c["id"]]["grp"]])}</span></span><span class="val num">{fmt(C.IND_BY_ID[c["id"]], c["value"])}{esc(C.IND_BY_ID[c["id"]]["unit"])}</span></li>'
+            for c in reds[:12]) + "</ul>")
+        if len(reds) > 12:
+            al.append(f'<p class="muted" style="margin:8px 0 0">{len(reds) - 12} more are in danger; open the Global, US, AI or Taiwan tab to see them.</p>')
+    else:
+        al.append('<p class="muted">Nothing is past its danger line.</p>')
+    al.append("</div>")
+    ov.append(f'<div class="cols">{"".join(lay)}{"".join(al)}</div>')
+    if D.get("ai"):
+        ov.append(f'<h2>AI funding chain <small><a href="#ai" data-go="ai">Open the full view</a></small></h2>{ai_block(D["ai"])}')
     if an.get("matches"):
-        ov.append('<h2>Most similar days in history</h2><div class="card tbl"><table><tr><th>Date</th><th>Distance</th><th>Next 1M</th><th>3M</th><th>6M</th><th>12M</th><th>Max DD in 6M</th></tr>')
+        ov.append('<h2>Closest days in history <small>and what the S&amp;P did next</small></h2><div class="tbl"><table>'
+                  '<tr><th>Date</th><th>Distance</th><th>1 month</th><th>3 months</th><th>6 months</th><th>12 months</th><th>Worst drop in 6 months</th></tr>')
         for m in an["matches"][:6]:
             f = m["fwd"]
             ov.append(f'<tr><td>{m["date"]}</td>{num_cell(m["dist"], "{:.2f}")}' + "".join(pct_cell(f[k]) for k in ("1M", "3M", "6M", "12M", "maxDD6M")) + "</tr>")
         s = an["summary"]
-        ov.append('<tr class="cur"><td>Median</td><td></td>' + "".join(pct_cell((s.get(k) or {}).get("median")) for k in ("1M", "3M", "6M", "12M", "maxDD6M")) + "</tr></table>"
-                  '<p class="muted">Matches today against every day since 2000 on 8 features (S&P drawdown, VIX, credit spread, rates, dollar, gold, stock-bond correlation); nearby dates merged. Details on the Backtest tab.</p></div>')
-    manual = D.get("manual") or {}
-    if manual.get("capex"):
-        ov.append('<h2>AI capex tracker (manual)</h2><div class="card"><ul class="alerts">' + "".join(
-            f'<li><b>{esc(x.get("co", ""))}</b>: {esc(x.get("latest", ""))} <span class="muted">{esc(x.get("date", ""))}</span></li>' for x in manual["capex"]) + "</ul></div>")
+        ov.append('<tr class="cur"><td>Median</td><td></td>' + "".join(pct_cell((s.get(k) or {}).get("median")) for k in ("1M", "3M", "6M", "12M", "maxDD6M")) + "</tr></table></div>"
+                  '<p class="note">Matched on S&amp;P drawdown, VIX, credit spread, 10-year yield, dollar, gold and stock-bond correlation, across every day since 2000. Lower distance means more similar.</p>')
 
-    # ---------------- sections
+    # ---- indicator tabs
     secs = {}
     for sk in C.SECTIONS:
         parts = []
@@ -201,58 +411,49 @@ def render(D: dict) -> str:
             ids = [s["id"] for s in C.IND if s["sec"] == sk and s["grp"] == gk]
             if not ids:
                 continue
-            parts.append(f'<h2>{esc(C.GROUP_NAMES[gk])}</h2><div class="grid">' + "".join(ind_card(cards[i]) for i in ids if i in cards) + "</div>")
+            gv = D["groups"].get(gk)
+            gtxt = f"<small>layer stress {gv:.0f}</small>" if gv is not None else ""
+            parts.append(f'<h2>{esc(C.GROUP_NAMES[gk])} {gtxt}</h2><div class="grp">' + "".join(ind_row(cards[i]) for i in ids if i in cards) + "</div>")
         secs[sk] = "".join(parts)
 
-    # ---------------- AI funding chain extras (prepended to the AI tab)
     ai = D.get("ai")
     if ai:
-        ic, lb = {"green": ("●", "Green"), "amber": ("▲", "Amber"), "red": ("■", "Red")}[ai["light"]]
-        P = [f'<h2>AI funding chain: composite light</h2><div class="card s-{ai["light"]}"><div class="big"><span class="chip s-{ai["light"]}" style="font-size:16px"><span class="ic">{ic}</span>{lb}</span> {ai["n_bad"]}/3 pillars failing</div>'
-             '<div class="pill">']
-        for k, nm in (("credit", "Credit alarm"), ("monetize", "Monetization at the source"), ("capex", "Capex surprise")):
-            r = ai["reasons"][k]
-            P.append(f'<div>{chip("red" if r else "green")}</div><div><b>{nm}</b>: {esc("; ".join(r)) if r else "not triggered"}</div>')
-        P.append('</div><p class="muted">One pillar failing = amber; two or more at once = red ("it only blows up when several negatives hit together"). Credit is the alarm, Anthropic&#39;s earnings are the verdict, and hyperscalers&#39; 2027 capex guidance decides whether to back upstream or the hyperscalers.</p></div>')
-        P.append(f'<h2>Contagion chain: link {ai["stage"] or 0:.0f}/4</h2><div class="card"><div class="muted" style="margin-bottom:6px">20-day return of each link</div><div class="chain">')
-        for i, l in enumerate(ai["chain"]):
-            if i:
-                P.append('<div class="ar">→</div>')
-            r20 = "—" if l["r20"] is None else f'{l["r20"]:+.1f}%'
-            r5 = "—" if l["r5"] is None else f'{l["r5"]:+.1f}%'
-            P.append(f'<div class="lk{" hit" if l["hit"] else ""}"><b>{esc(l["name"]).replace("Neocloud", "Neo&shy;cloud").replace("Hyperscalers", "Hyper&shy;scalers")}</b>{r20}<div class="muted">5d {r5}</div><div class="muted">trigger {l["th"]:.0f}%</div></div>')
-        P.append('</div><p class="muted">Checked from the weakest link to the strongest; a link only counts if every link before it has cracked. Spreading in order = contagion under way; hyperscalers falling while upstream holds is not this kind of contagion.</p></div>')
-        secs["ai"] = "".join(P) + secs["ai"]
-        Q = ['<h2>Layer B: credit signals updated from news</h2><div class="card tbl"><table><tr><th>Indicator</th><th>Value</th><th>As of</th><th>Light</th><th>Watch / Danger</th></tr>']
+        top_ai = [f'<div class="verdict"><h1>AI funding chain is {ai["light"]}.</h1><p>Risk travels from the weakest balance sheets to the strongest. '
+                  'Credit is the alarm, Anthropic’s earnings are the verdict, and hyperscalers’ 2027 capex guidance decides whether to back upstream or the hyperscalers.</p></div>',
+                  ai_block(ai, full=True)]
+        Q = ['<h2>Credit signals from the news <small>updated weekly</small></h2><div class="tbl"><table><tr><th>Indicator</th><th>Value</th><th>As of</th><th>Light</th><th>Watch</th><th>Danger</th></tr>']
         for it in ai["b_layer"]:
-            v = "—" if it.get("value") is None else f'{it["value"]:,}{esc(it["unit"])}'
-            Q.append(f'<tr><td>{esc(it["name"])}<div class="muted">{esc(it.get("note", ""))}</div></td><td>{v}</td><td>{esc(it.get("date") or "—")}</td>'
-                     f'<td>{chip(it["status"])}</td><td>{it["amber"]} / {it["red"]}</td></tr>')
-        Q.append('</table><p class="muted">No free API; updated weekly from news. Treat anything older than two weeks as stale.</p></div>')
-        Q.append('<h2>Layer C: quarterly earnings checklist</h2><div class="card"><ul class="alerts">')
-        stl = {"pending": ("○", "Pending"), "ok": ("●", "Met"), "miss": ("■", "Missed")}
+            v = "–" if it.get("value") is None else f'{it["value"]:,}{esc(it["unit"])}'
+            Q.append(f'<tr><td><b>{esc(it["name"])}</b><div class="muted">{esc(it.get("note", ""))}</div></td><td>{v}</td><td>{esc(it.get("date") or "–")}</td>'
+                     f'<td>{status(it["status"])}</td><td>{it["amber"]}</td><td>{it["red"]}</td></tr>')
+        Q.append('</table></div><p class="note">These have no free data feed. A weekly job reads the news and updates them; treat anything more than two weeks old as stale.</p>')
+        Q.append('<h2>Quarterly earnings checklist</h2><div class="grp">')
+        stl = {"pending": ("Pending", "n"), "ok": ("Met", "g"), "miss": ("Missed", "r")}
         for it in ai["checklist"]:
-            icn, lbl = stl.get(it.get("status", "pending"), ("○", "Pending"))
-            cls = {"ok": "green", "miss": "red"}.get(it.get("status"), "na")
-            Q.append(f'<li><span class="chip s-{cls}"><span class="ic">{icn}</span>{lbl}</span> <b>{esc(it["co"])}</b>: {esc(it["item"])}</li>')
-        Q.append('</ul></div><h2>Calendar</h2><div class="card"><ul class="alerts">')
+            lb, cc = stl.get(it.get("status", "pending"), stl["pending"])
+            note = f'<div class="nt">{esc(it["note"])}</div>' if it.get("note") else ""
+            Q.append(f'<div class="row" style="grid-template-columns:140px 1fr 90px"><div class="nm">{esc(it["co"])}</div><div>{esc(it["item"])}{note}</div><div class="stc"><span class="st {cc}">{lb}</span></div></div>')
+        Q.append('</div><h2>Calendar</h2><div class="grp">')
         for ev in ai["calendar"]:
-            when = "date TBD" if ev["days"] is None else ("today" if ev["days"] == 0 else f'in {ev["days"]} days' if ev["days"] > 0 else "yesterday")
-            Q.append(f'<li><b>{esc(ev.get("date") or "TBD")}</b>{" (approx.)" if ev.get("approx") and ev.get("date") else ""} · {when}: {esc(ev["event"])}</li>')
-        Q.append("</ul></div>")
-        secs["ai"] += "".join(Q)
+            dd = ev["days"]
+            when = "Date to be set" if dd is None else ("Today" if dd == 0 else f"In {dd} days" if dd > 0 else "Yesterday")
+            soon = dd is not None and 0 <= dd <= 14
+            Q.append(f'<div class="row{" a" if soon else ""}" style="grid-template-columns:140px 1fr 120px"><div class="nm num">{esc(ev.get("date") or "TBD")}</div>'
+                     f'<div>{esc(ev["event"])}{" <span class=muted>(approximate date)</span>" if ev.get("approx") and ev.get("date") else ""}</div><div class="stc muted">{when}</div></div>')
+        Q.append("</div>")
+        secs["ai"] = "".join(top_ai) + secs["ai"] + "".join(Q)
 
-    # ---------------- backtest
-    bt = D.get("bt") or {}
-    B = []
+    # ---- backtest
+    B = ['<div class="verdict"><h1>How past selloffs played out.</h1><p>Everything here is computed from real price, rate and spread history. '
+         'Small samples are flagged; use these as context, not forecasts.</p></div>']
     ep = bt.get("episodes") or {}
     cur = ep.get("current")
     if cur:
         N = cur["days"]
-        B.append(f'<h2>This selloff vs past ones, at trading day {N}</h2><div class="card tbl"><table>'
-                 '<tr><th>Episode</th><th>S&P</th><th>VIX high</th><th>Baa spread chg</th><th>Gold</th><th>Scen. A</th><th>B</th><th>C</th><th>D</th><th>Next 3M</th><th>Next 12M</th></tr>')
+        B.append(f'<h2>This selloff against past ones <small>all measured at trading day {N} after the S&amp;P peak</small></h2><div class="tbl"><table>'
+                 '<tr><th>Episode</th><th>S&amp;P</th><th>VIX high</th><th>Baa spread chg</th><th>Gold</th><th>A</th><th>B</th><th>C</th><th>D</th><th>S&amp;P next 3M</th><th>Next 12M</th></tr>')
         sm = cur.get("scen_max") or {}
-        B.append(f'<tr class="cur"><td>Current (from {cur["peak"].strftime("%Y-%m-%d")})</td>{pct_cell(cur["dd"])}{num_cell(cur.get("vix_max"))}{num_cell(cur.get("baa_chg"), "{:+.2f}")}{pct_cell(cur.get("gold_chg"))}'
+        B.append(f'<tr class="cur"><td>Now, from {cur["peak"].strftime("%Y-%m-%d")}</td>{pct_cell(cur["dd"])}{num_cell(cur.get("vix_max"))}{num_cell(cur.get("baa_chg"), "{:+.2f}")}{pct_cell(cur.get("gold_chg"))}'
                  + "".join(num_cell(sm.get(k), "{:.0f}") for k in "ABCD") + "<td>?</td><td>?</td></tr>")
         for e in ep["episodes"]:
             dn = e.get("dayN")
@@ -260,61 +461,124 @@ def render(D: dict) -> str:
                 continue
             s2 = dn.get("scen_max") or {}
             af = e.get("afterN") or {}
-            B.append(f'<tr><td>{esc(e["name"])} ({e["peak"].strftime("%Y-%m")})</td>{pct_cell(dn["dd"])}{num_cell(dn.get("vix_max"))}{num_cell(dn.get("baa_chg"), "{:+.2f}")}{pct_cell(dn.get("gold_chg"))}'
+            B.append(f'<tr><td>{esc(e["name"])} <span class="muted">{e["peak"].strftime("%Y-%m")}</span></td>{pct_cell(dn["dd"])}{num_cell(dn.get("vix_max"))}{num_cell(dn.get("baa_chg"), "{:+.2f}")}{pct_cell(dn.get("gold_chg"))}'
                      + "".join(num_cell(s2.get(k), "{:.0f}") for k in "ABCD") + pct_cell(af.get("3M")) + pct_cell(af.get("12M")) + "</tr>")
-        B.append('</table><p class="muted">Every episode is measured the same number of trading days from its S&P peak, so the comparison is like for like. "Next" is the S&P return from day N.</p></div>')
+        B.append("</table></div>")
     if ep.get("episodes"):
-        B.append('<h2>Past selloffs, peak to trough</h2><div class="card tbl"><table><tr><th>Episode</th><th>Max drawdown</th><th>Days to trough</th><th>Days to recover</th>'
-                 '<th>VIX high</th><th>Baa chg</th><th>10Y chg</th><th>Dollar</th><th>Gold</th><th>TLT</th><th>TAIEX max DD</th><th>A</th><th>B</th><th>C</th><th>D</th></tr>')
+        B.append('<h2>Past selloffs, peak to trough</h2><div class="tbl"><table><tr><th>Episode</th><th>Max drop</th><th>Days to trough</th><th>Days to recover</th>'
+                 '<th>VIX high</th><th>Baa chg</th><th>10Y chg</th><th>Dollar</th><th>Gold</th><th>TLT</th><th>TAIEX worst</th><th>A</th><th>B</th><th>C</th><th>D</th></tr>')
         for e in ep["episodes"]:
             s2 = e.get("scen_max") or {}
-            B.append(f'<tr><td>{esc(e["name"])} ({e["peak"].strftime("%Y-%m")})</td>{pct_cell(e["dd"])}{num_cell(e["to_trough"], "{:.0f}")}{num_cell(e["recover"], "{:.0f}")}'
+            B.append(f'<tr><td>{esc(e["name"])} <span class="muted">{e["peak"].strftime("%Y-%m")}</span></td>{pct_cell(e["dd"])}{num_cell(e["to_trough"], "{:.0f}")}{num_cell(e["recover"], "{:.0f}")}'
                      f'{num_cell(e.get("vix_max"))}{num_cell(e.get("baa_chg"), "{:+.2f}")}{num_cell(e.get("y10_chg"), "{:+.2f}")}{pct_cell(e.get("usd_chg"))}{pct_cell(e.get("gold_chg"))}{pct_cell(e.get("tlt_chg"))}{pct_cell(e.get("twii_dd"))}'
                      + "".join(num_cell(s2.get(k), "{:.0f}") for k in "ABCD") + "</tr>")
-        B.append('</table><p class="muted">Days are trading days. Scenario columns are the highest score recomputed from the indicators available at the time; use them to sanity-check the scoring (e.g. D should be high in Mar 2020, C in 2008).</p></div>')
+        B.append('</table></div><p class="note">Days are trading days. A–D are the highest scenario scores the model would have shown at the time, a check on whether the scoring makes sense: D should be high in March 2020, C in 2008.</p>')
     rl = bt.get("rules") or []
     if rl:
-        B.append('<h2>Conditional backtests: what happened next</h2><div class="card tbl"><table><tr><th>Condition</th><th>N</th><th>1M median</th><th>3M median</th><th>6M median</th><th>12M median</th><th>12M % up</th><th>Median max DD in 6M</th></tr>')
+        B.append('<h2>When this happened before, what came next</h2><div class="tbl"><table><tr><th>Condition</th><th>Times</th><th>1M median</th><th>3M median</th><th>6M median</th><th>12M median</th><th>Up after 12M</th><th>Worst drop in 6M (median)</th></tr>')
         for r in rl:
             g = lambda k, f="median": (r.get(k) or {}).get(f)  # noqa: E731
-            nm = esc(r["name"]) + (' <span class="active">← active now</span>' if r.get("active") and not r.get("baseline") else "")
-            B.append(f'<tr><td>{nm}<div class="muted">{esc(r.get("asset", ""))}</div></td><td>{r.get("n", 0)}</td>'
+            act = '<span class="tag-active">Active now</span>' if r.get("active") and not r.get("baseline") else ""
+            B.append(f'<tr><td>{esc(r["name"])}{act}<div class="muted">{esc(r.get("asset", ""))}</div></td><td>{r.get("n", 0)}</td>'
                      + pct_cell(g("1M")) + pct_cell(g("3M")) + pct_cell(g("6M")) + pct_cell(g("12M"))
                      + num_cell(g("12M", "pos"), "{:.0f}%") + pct_cell(g("maxDD6M")) + "</tr>")
-        B.append('</table><p class="muted">Each episode counts once (1-month cooldown after a trigger). Treat results with N below 5 as anecdotal. Taiwan margin conditions fill in as margin history is backfilled on each run.</p>')
-        B.append('<details><summary class="muted">Trigger dates for each condition</summary>' + "".join(
-            f'<p class="muted"><b>{esc(r["name"])}</b>: {", ".join(r.get("dates") or []) or "—"}</p>' for r in rl if not r.get("baseline")) + "</details></div>")
+        B.append('</table></div><p class="note">Each episode counts once (one-month cooldown after a trigger). Fewer than 5 cases is anecdotal. Taiwan margin conditions fill in as margin history is backfilled.</p>')
+        B.append('<details><summary>Show the trigger dates for each condition</summary>' + "".join(
+            f'<p class="muted"><b>{esc(r["name"])}</b>: {", ".join(r.get("dates") or []) or "none"}</p>' for r in rl if not r.get("baseline")) + "</details>")
     if an.get("matches"):
         labels = an["labels"]
-        B.append('<h2>Historical analogs: feature comparison</h2><div class="card tbl"><table><tr><th>Date</th>' + "".join(f"<th>{esc(v)}</th>" for v in labels.values()) + "</tr>")
+        B.append('<h2>Historical analogs, feature by feature</h2><div class="tbl"><table><tr><th>Date</th>' + "".join(f"<th>{esc(v)}</th>" for v in labels.values()) + "</tr>")
         B.append(f'<tr class="cur"><td>Today ({an["asof"]})</td>' + "".join(num_cell(an["today"][k], "{:+.2f}") for k in labels) + "</tr>")
         for m in an["matches"]:
             B.append(f'<tr><td>{m["date"]}</td>' + "".join(num_cell(m["feat"][k], "{:+.2f}") for k in labels) + "</tr>")
         B.append("</table></div>")
-    B.append(f'<h2>Method and limitations</h2><div class="card muted">{D["method_html"]}</div>')
-    B.append('<h2>Data status</h2><div class="card muted"><ul class="alerts">' + "".join(f"<li>{esc(x)}</li>" for x in D["log"]) + "</ul></div>")
+    B.append(f'<h2>Data status</h2><div class="panel"><ul class="alert-list">' + "".join(f"<li><span></span><span class=muted>{esc(x)}</span><span></span></li>" for x in D["log"]) + "</ul></div>")
 
     tabs = [("ov", "Overview", "".join(ov)), ("global", "Global", secs["global"]), ("us", "US", secs["us"]),
-            ("ai", "AI funding chain", secs["ai"]), ("tw", "Taiwan", secs["tw"]), ("bt", "Backtest", "".join(B))]
+            ("ai", "AI funding chain", secs["ai"]), ("tw", "Taiwan", secs["tw"]), ("bt", "Backtest", "".join(B)),
+            ("guide", "How to read", guide_html(D))]
     nav = "".join(f'<a href="#{t}" data-t="{t}" class="{"on" if i == 0 else ""}">{n}</a>' for i, (t, n, _) in enumerate(tabs))
-    body = "".join(f'<section id="{t}" class="{"on" if i == 0 else ""}">{c}</section>' for i, (t, _, c) in enumerate(tabs))
-    return (f'<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-            f'<title>Market Stress Dashboard</title><style>{CSS}</style></head><body>'
-            f'<header><h1>Market Stress Dashboard</h1><div class="sub">Updated {esc(D["updated"])} (Shanghai) · US data to {esc(D["asof_us"])} · Taiwan data to {esc(D["asof_tw"])}</div></header>'
-            f'<nav>{nav}</nav>{body}<div id="tip"></div><script>{JS}</script>'
-            f'<script type="application/json" id="data">{json.dumps({"scenarios": sc["now"], "updated": D["updated"]})}</script></body></html>')
+    body = "".join(f'<section class="tab{" on" if i == 0 else ""}" id="{t}"><div class="wrap">{c}</div></section>' for i, (t, _, c) in enumerate(tabs))
+    return ('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<title>Market Stress Monitor</title>'
+            '<link rel="preload" href="fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>'
+            f'<style>{CSS}</style></head><body>'
+            f'<div class="top"><div class="wrap"><div class="brand">Market Stress Monitor</div><div class="stamps num">'
+            f'<span>Updated <b>{esc(D["updated"])}</b> Shanghai</span><span>US close <b>{esc(D["asof_us"])}</b></span><span>Taiwan close <b>{esc(D["asof_tw"])}</b></span></div></div></div>'
+            f'<nav aria-label="Sections"><div class="wrap">{nav}</div></nav>{body}<div id="tip"></div><script>{JS}</script>'
+            f'<script type="application/json" id="data">{json.dumps({"scenarios": D["scenarios"]["now"], "updated": D["updated"]})}</script></body></html>')
 
 
-METHOD_HTML = """
-<p><b>Lights</b>: every indicator has a Watch and a Danger threshold. Fixed thresholds are anchored to past episodes (e.g. HY spread peaked near 5.3% in 2018Q4). Percentile-based indicators use their own history's 85th/97th percentile, computed only with data available at the time (no look-ahead).</p>
-<p><b>Layer stress</b>: the average stress of the indicators in a layer. 0 = calm, 50 = right at the Watch line, 100 = everything past Danger.</p>
-<p><b>Scenario scores</b>:
-A Deleveraging correction = equity stress × (1 − 0.8×credit) × (1 − 0.8×funding): highest when equities panic but credit and funding are fine.
-B Earnings-downgrade bear = weighted AI, AI contagion, policy and growth layers, plus a bump when capex cuts are announced.
-C Credit event = mainly credit and AI credit, amplified by AI contagion and equity stress.
-D Liquidity crisis = funding markets + cross-asset (stocks/bonds/gold falling together, dollar, yen).
-Weights are judgment calls from our discussion, not statistically fitted; the Backtest tab shows the score each past episode would have produced, so you can check whether the scoring makes sense.</p>
-<p><b>AI funding chain</b>: three pillars — credit alarm (BBB spread, credit-equity divergence, private credit, contagion stage ≥3, Layer B credit items), monetization (Anthropic and peers vs the checklist), and capex surprise. One failing = amber; two or more = red.</p>
-<p><b>Data limits</b>: FRED only keeps about 3 years of the ICE HY/IG/BBB spreads, so long-history backtests use Moody's Baa − 10Y instead. Taiwan margin history is backfilled from the exchange a little on each run, so its backtests get more complete over time. The margin maintenance ratio is estimated as (margin shares × close) ÷ margin loans for listed stocks; it is not the same basis as brokers' account-level ratios, so read the direction more than the level.</p>
-<p><b>Not investment advice.</b></p>
-"""
+# ---------------------------------------------------------------- guide
+def guide_html(D) -> str:
+    sc = D["scenarios"]["now"]
+    top = max(sc, key=sc.get)
+    rows = []
+    for sk, sname in C.SECTIONS.items():
+        rows.append(f"<h3>{esc(sname)}</h3><div class='gl'>")
+        for spec in [s for s in C.IND if s["sec"] == sk]:
+            if spec["mode"] == "info":
+                th = "No light; it shows direction, not stress."
+            elif spec["mode"] == "pct":
+                th = f"Lights by its own history: watch past the {spec['amber'] * 100:.0f}th percentile, danger past the {spec['red'] * 100:.0f}th (or below the {spec['amber'] * 100:.0f}th/{spec['red'] * 100:.0f}th when low is bad)."
+            else:
+                worse = "higher" if spec["dir"] > 0 else "lower"
+                th = f"Watch at {fmt(spec, spec['amber'])}{spec['unit']}, danger at {fmt(spec, spec['red'])}{spec['unit']} ({worse} is worse)."
+            rows.append(f"<div class='k'>{esc(spec['name'])}</div><div class='d'>{esc(spec['note'] or '')}{' ' if spec['note'] else ''}<span class='muted'>{esc(th)}</span></div>")
+        rows.append("</div>")
+    return f"""<div class="guide">
+<div class="verdict"><h1>How to read this dashboard.</h1>
+<p class="lead">It answers one question twice a day: how worried should I be, and is it getting better or worse? Everything else is the evidence behind that answer.</p></div>
+
+<h2>Reading it in a minute</h2>
+<ol class="steps">
+<li><b>Read the headline.</b> It names the pattern the data matches best right now (today: scenario {top}) and says whether credit and funding markets agree. Equity stress alone usually fades; stress that spreads into credit and funding is what turns a correction into a crisis.</li>
+<li><b>Look at the four scenario scores and which way they moved.</b> The dark tile is the highest. The change since the last update and over five days matters more than the level: a score climbing 15 points in a week is the warning.</li>
+<li><b>Scan "Changed since the last update".</b> These are the indicators that just crossed a line. This list is the reason to open the dashboard at all on a quiet day.</li>
+<li><b>Check the AI funding chain.</b> If contagion is spreading link by link and the credit pillar turns red, the AI selloff is becoming a balance-sheet problem rather than a valuation problem.</li>
+<li><b>Only then dig into a tab.</b> Global, US, AI and Taiwan list every indicator with its one-year line; Backtest shows what happened after similar setups.</li>
+</ol>
+
+<h2>The lights</h2>
+<div class="legend-row"><span class="st g">Normal</span><span class="st a">Watch</span><span class="st r">Danger</span><span class="st i">Info</span><span class="st n">No data</span></div>
+<p>Every indicator has a watch line and a danger line, shown as dashed amber and red lines on its chart. Fixed lines are anchored to past episodes (for example, the high-yield spread peaked near 5.3% in late 2018 and near 11% in March 2020). Indicators marked as percentile-based are judged against their own history, using only the data that existed at each point in time.</p>
+<p>A single red light is not a signal. Look for several lights in the same layer turning together, and for lights in a slower layer (credit, funding) following a fast one (equities).</p>
+
+<h2>Layer stress</h2>
+<p>Each layer averages the stress of its indicators on a 0–100 scale: 0 is calm, 50 sits right on the watch line, 100 means everything is past danger. Equities, volatility and Asia move first and fastest. Credit and funding move slowly and rarely, which is why they carry more weight when they do move.</p>
+
+<h2>The four scenarios</h2>
+<p><b>A. Deleveraging correction</b> (like late 2018 or August 2024). Equities panic while credit and funding stay calm. Historically repaired within months. The score falls if credit or funding stress rises, because then it is no longer this pattern.</p>
+<p><b>B. Earnings-downgrade bear</b> (like 2000). AI stocks fall, policy is tight and growth slows. This is the slow, multi-year path. It gets a bump if a hyperscaler announces a capex cut.</p>
+<p><b>C. Credit event</b> (like mid-2007 or SVB in 2023). Stress spreads from equity into borrowers and lenders: high-yield and BBB spreads, private credit, regional banks, AI-linked debt.</p>
+<p><b>D. Liquidity crisis</b> (like September 2008 or March 2020). Everything is sold at once, even Treasuries; the dollar spikes; repo rates jump above the Fed's rate.</p>
+<p>The scores measure how strongly today's data matches each pattern. They are not probabilities and do not add up to 100. The weights are judgment calls, not statistically fitted; the Backtest tab shows the score each past episode would have produced so you can check them.</p>
+
+<h2>Three switches that would change the view</h2>
+<ol class="steps">
+<li><b>Hyperscalers cut capex.</b> Watch the AI funding chain tab and the earnings checklist. This moves the story from valuation to earnings, toward scenario B.</li>
+<li><b>Credit confirms.</b> High-yield spread above 4.5% or BBB above 2%, private credit underperforming, CoreWeave or Oracle CDS making new highs. This moves toward scenario C.</li>
+<li><b>Treasuries and stocks fall together, the dollar spikes, SOFR jumps above IORB.</b> The "stocks/bonds/gold down together" and funding rows catch this. This is scenario D, and the one that forces central banks to act.</li>
+</ol>
+
+<h2>The AI funding chain</h2>
+<p>Risk is assumed to travel from the weakest balance sheets to the strongest: neoclouds such as CoreWeave, then Oracle, then Nvidia and memory makers, then the cash-rich hyperscalers. A link counts as cracked when its 20-day return falls below its trigger, and only if every link before it has cracked too. Spreading in order means contagion; the hyperscalers falling while upstream holds is a different story.</p>
+<p>The composite light has three pillars: the credit alarm, monetization at the source (Anthropic and peers against the earnings checklist), and capex surprises. One failing is amber. Two or more failing together is red, because a single negative rarely breaks the chain on its own.</p>
+<p>The news-based credit signals (CDS, bond yields, GPU loan rates, H100 rental prices) have no free data feed, so a weekly job reads the news and updates them every Sunday.</p>
+
+<h2>Taiwan</h2>
+<p>Margin data shows forced selling. When margin calls hit, investors sell what they can, so locked limit-down small caps push selling into TSMC and the ETFs. The <i>deleveraging progress</i> row divides the fall in margin loans by the fall in the index since its peak; above 1 means leverage is being cut faster than prices are falling, which has tended to come near the end of a selloff (the Backtest tab tests this once enough history is loaded). The maintenance ratio here is an estimate on a different basis from brokers' figures, so read its direction rather than its level.</p>
+
+<h2>Backtest and analogs</h2>
+<p>The comparison table lines up every past selloff at the same number of trading days after its peak as today, so you are comparing like with like. The conditional table asks: the last times this exact condition was true, what did the market do over the following months? The analog table finds the days since 2000 whose overall picture (drawdown, VIX, credit, rates, dollar, gold, stock-bond correlation) looked most like today.</p>
+<p>Samples are small: there have only been about a dozen major selloffs since 1998. Use these to calibrate expectations, not to forecast.</p>
+
+<h2>Every indicator</h2>
+{''.join(rows)}
+
+<h2>Limits</h2>
+<p>FRED only keeps about three years of the ICE high-yield, investment-grade and BBB spreads, so long backtests use Moody's Baa spread instead. Taiwan margin history is backfilled a little on every run and will be complete in about two weeks. Prices come from Yahoo Finance, which occasionally rate-limits; a missing ticker retries on the next run and shows as stale. This is a monitoring tool, not investment advice.</p>
+</div>"""
+
+
+METHOD_HTML = ""
