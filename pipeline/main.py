@@ -28,12 +28,14 @@ def load_raw(do_fetch: bool, twse_budget: int):
     if do_fetch:
         fred = fetch.fetch_fred()
         yahoo = fetch.fetch_yahoo()
-        tw_days = []
-        if "TWII" in yahoo:
+        # TWSE trading days: TAIEX dates when available, otherwise all weekdays
+        # (holidays just return empty and are skipped after two tries)
+        if "TWII" in yahoo and yahoo["TWII"].notna().sum() > 1000:
             tw = yahoo["TWII"].dropna()
-            tw = tw[tw.index >= "2015-01-01"]
-            tw_days = [d.date() for d in tw.index]
-        twse = fetch.fetch_twse(tw_days, budget_s=twse_budget) if tw_days else pd.DataFrame()
+            tw_days = [d.date() for d in tw.index[tw.index >= "2015-01-01"]]
+        else:
+            tw_days = [d.date() for d in pd.bdate_range("2015-01-01", pd.Timestamp.today())]
+        twse = fetch.fetch_twse(tw_days, budget_s=twse_budget)
     else:
         rd = lambda n: pd.read_csv(fetch.RAW / n, index_col=0, parse_dates=True) if (fetch.RAW / n).exists() else pd.DataFrame()  # noqa: E731
         fred, yahoo, twse = rd("fred.csv"), rd("yahoo.csv"), rd("twse.csv")

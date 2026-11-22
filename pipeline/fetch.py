@@ -103,30 +103,68 @@ def _stooq(sym: str) -> pd.Series:
     return pd.Series(df["Close"].values, index=pd.to_datetime(df["Date"]))
 
 
+def _yf_batch(syms: list[str], start: str) -> pd.DataFrame:
+    """Batch download through yfinance (handles Yahoo's cookie/crumb, which
+    plain HTTP requests from cloud IPs get 429/blocked without)."""
+    import yfinance as yf
+    out = []
+    for i in range(0, len(syms), 15):
+        chunk = syms[i:i + 15]
+        for attempt in range(3):
+            try:
+                df = yf.download(chunk, start=start, auto_adjust=True, progress=False,
+                                 threads=False, group_by="column", timeout=30)
+                if df is not None and len(df):
+                    c = df["Close"] if isinstance(df.columns, pd.MultiIndex) else df[["Close"]].rename(columns={"Close": chunk[0]})
+                    out.append(c)
+                break
+            except Exception as e:  # noqa: BLE001
+                log(f"[Yahoo] batch {chunk[0]}.. attempt {attempt + 1} failed: {e}")
+                time.sleep(20 * (attempt + 1))
+        time.sleep(2)
+    if not out:
+        return pd.DataFrame()
+    df = pd.concat(out, axis=1)
+    df.index = pd.to_datetime(df.index).tz_localize(None).normalize()
+    return df
+
+
 def fetch_yahoo() -> pd.DataFrame:
     path = RAW / "yahoo.csv"
     have = pd.read_csv(path, index_col=0, parse_dates=True) if path.exists() else pd.DataFrame()
-    cols, failed = {}, []
-    for name, sym in C.YAHOO_SERIES.items():
-        # incremental: 45 days if we already have the column, else full history
-        if name in have and have[name].notna().sum() > 300:
-            start = datetime.now() - timedelta(days=45)
-        else:
-            start = datetime.fromisoformat(C.HISTORY_START)
+    inv = {v: k for k, v in C.YAHOO_SERIES.items()}
+    full = [s for n, s in C.YAHOO_SERIES.items() if not (n in have and have[n].notna().sum() > 300)]
+    incr = [s for s in C.YAHOO_SERIES.values() if s not in full]
+    cols = {}
+    for syms, start in ((incr, (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d")), (full, C.HISTORY_START)):
+        if not syms:
+            continue
+        try:
+            df = _yf_batch(syms, start)
+        except Exception as e:  # noqa: BLE001
+            log(f"[Yahoo] yfinance unavailable: {e}")
+            df = pd.DataFrame()
+        for sym in df.columns:
+            s = df[sym].dropna()
+            if len(s):
+                cols[inv[sym]] = s
+    # per-ticker fallback for anything the batch missed
+    missing = [n for n in C.YAHOO_SERIES if n not in cols]
+    for name in missing:
+        sym = C.YAHOO_SERIES[name]
+        start = datetime.now() - timedelta(days=45) if (name in have and have[name].notna().sum() > 300) else datetime.fromisoformat(C.HISTORY_START)
         try:
             cols[name] = _yahoo_chart(sym, start)
         except Exception as e:  # noqa: BLE001
             fb = C.STOOQ_FALLBACK.get(name)
-            if fb:
-                try:
-                    cols[name] = _stooq(fb)
-                    log(f"[Yahoo] {name} fell back to stooq")
-                    continue
-                except Exception as e2:  # noqa: BLE001
-                    e = e2
-            failed.append(name)
-            log(f"[Yahoo] {name} ({sym}) failed: {e}")
-        time.sleep(0.4)
+            try:
+                if not fb:
+                    raise e
+                cols[name] = _stooq(fb)
+                log(f"[Yahoo] {name} fell back to stooq")
+            except Exception as e2:  # noqa: BLE001
+                log(f"[Yahoo] {name} ({sym}) failed: {str(e2)[:80]}")
+        time.sleep(1.5)
     out = _merge_save(path, pd.DataFrame(cols))
     log(f"[Yahoo] {len(cols)}/{len(C.YAHOO_SERIES)} tickers, latest {out.index.max().date() if len(out) else '-'}")
     return out
